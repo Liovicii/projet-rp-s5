@@ -13,8 +13,9 @@ dht.o: dht.c dht.h
 
 # exécution des scripts de tests 
 test:
-	# à completer
+	./test-*.sh
 
 # nettoyage
 clean:
+	rm -f *.log
 	rm -f *.o
