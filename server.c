@@ -28,8 +28,7 @@ int main(int argc, char * argv[]){
     // initialisations des variables
     int port, sock, length, convert;
     struct sockaddr_in6 addr_server;
-    //unsigned char ip[sizeof(struct in6_addr)];
-	char str[INET6_ADDRSTRLEN];
+	//char str[INET6_ADDRSTRLEN];
 
     // vérification des arguments
     if(argc != 3){
@@ -63,12 +62,12 @@ int main(int argc, char * argv[]){
     addr_server.sin6_family = AF_INET6;
     addr_server.sin6_port = port;
     length = sizeof(struct sockaddr_in6);
-
+/*
 	// affichages tests
 	printf("port: %d\n", addr_server.sin6_port);
 	printf("IPv6: %s\n", 
 	inet_ntop(AF_INET6,&addr_server.sin6_addr,str,INET6_ADDRSTRLEN));
-
+*/
     // on attache l'adresse IP du serveur au socket
     if(bind(sock, (struct sockaddr *)&addr_server, length) == ERROR){
         perror("bind");
