@@ -1,9 +1,9 @@
 #include "dht.h"
 
-Bool ip6_valide(char * ip){
-    return TRUE;   
+char * ip6_valide(char * ip){
+    return ip;   
 }
 
-Bool port_valide(int port){
-    return TRUE;
+int port_valide(int port){
+    return port;
 }

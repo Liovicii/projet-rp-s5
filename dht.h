@@ -1,12 +1,25 @@
 #ifndef __server_h
 #define __server_h
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#define ERROR -1
 
 /**
- * \enum Bool
- * \brief Défini un type booléen.
+ * \def PERRORMSG(cmd, msg)
+ * \brief Test une primitives systèmes.
+ *
+ * \param cmd La primitives systèmes qui est exécuté.
+ * \param msg Le message que doit afficher perror.
  */
-typedef enum { FALSE, TRUE } Bool;
+#define PERRORMSG(cmd, msg) if((cmd) == ERROR) \
+    do{perror(msg); exit(EXIT_FAILURE);}while(0);
 
 
 /**
@@ -16,7 +29,7 @@ typedef enum { FALSE, TRUE } Bool;
  * \param ip Chaîne de caractère contenant une IPv6
  * \return TRUE si le paramètre est une adresse IPv6 valide, FALSE sinon.
  */
-Bool ip6_valide(char * ip);
+char * ip6_valide(char * ip);
 
 
 /**
@@ -26,8 +39,7 @@ Bool ip6_valide(char * ip);
  * \param port Un numéro de port.
  * \return TRUE si le paramètre est un numéro de port valide, FALSE sinon.
  */
-
-Bool port_valide(int port);
+int port_valide(int port);
 
 
 #endif
