@@ -26,34 +26,35 @@ int main(int argc, char **argv)
 		struct sockaddr_in dest;
 
 		// check the number of args on command line
-		if(argc != 4)
+		if(argc != 5)
 		{
-		    printf("USAGE: %s @dest port_num string\n", argv[0]);
+		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		    exit(-1);
 		}
 		port_nb=atoi(argv[2]);
 		// socket factory
-		if((sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) == -1)
+		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
 		    perror("socket\n");
 		exit(EXIT_FAILURE);
 		}
 
 		// init remote addr structure and other params
-		dest.sin_family = AF_INET;
+		dest.sin_family = AF_INET6;
 		dest.sin_port   = port_nb;
 		addrlen         = sizeof(struct sockaddr_in);
 
+		printf("%s\n",argv[1]);
 		// get addr from command line and convert it
-		if(inet_pton(AF_INET,argv[1],&dest.sin_addr) != 1)
+		if(inet_pton(AF_INET6,argv[1],&dest.sin_addr) != 1)
 		{
 		    perror("inet_pton\n");
 			close(sockfd);
 			exit(EXIT_FAILURE);
 		}
-	
+		
 		// send string
-		if(sendto(sockfd,argv[3],strlen(argv[3]),0,(struct sockaddr *)&dest,addrlen) == -1)
+		if(sendto(sockfd,argv[4],strlen(argv[4]),0,(struct sockaddr *)&dest,addrlen) == -1)
 		{
 		    perror("sendto\n");
 			close(sockfd);
@@ -62,50 +63,8 @@ int main(int argc, char **argv)
 
 		// close the socket
 		close(sockfd);
-	}
-	if(strcmp(argv[3],"set")==0){
-		//check nb args == 6
-		//On envoie un message
-		struct sockaddr_in dest;
-
-		// check the number of args on command line
-		if(argc != 4)
-		{
-		    printf("USAGE: %s @dest port_num string\n", argv[0]);
-		    exit(-1);
-		}
-		port_nb=atoi(argv[2]);
-		// socket factory
-		if((sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) == -1)
-		{
-		    perror("socket\n");
-		exit(EXIT_FAILURE);
-		}
-
-		// init remote addr structure and other params
-		dest.sin_family = AF_INET;
-		dest.sin_port   = port_nb;
-		addrlen         = sizeof(struct sockaddr_in);
-
-		// get addr from command line and convert it
-		if(inet_pton(AF_INET,argv[1],&dest.sin_addr) != 1)
-		{
-		    perror("inet_pton\n");
-			close(sockfd);
-			exit(EXIT_FAILURE);
-		}
-	
-		// send string
-		if(sendto(sockfd,argv[3],strlen(argv[3]),0,(struct sockaddr *)&dest,addrlen) == -1)
-		{
-		    perror("sendto\n");
-			close(sockfd);
-			exit(EXIT_FAILURE);
-		}
-
-		// close the socket
-		close(sockfd);
-		//On attends une reponse
+		
+				//On attends une reponse
 		struct sockaddr_in my_addr;
 		struct sockaddr_in client;
 		/*
@@ -119,7 +78,7 @@ int main(int argc, char **argv)
 		port_nb=atoi(argv[1]);
 		*/
 		// socket factory
-		if((sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) == -1)
+		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
 		    perror("socket");
 		exit(EXIT_FAILURE);
@@ -127,7 +86,7 @@ int main(int argc, char **argv)
 	
 		printf("%d\n",INADDR_ANY);
 		// init local addr structure and other params
-		my_addr.sin_family      = AF_INET;
+		my_addr.sin_family      = AF_INET6;
 		my_addr.sin_port        = port_nb;
 		my_addr.sin_addr.s_addr = INADDR_ANY;
 		addrlen                 = sizeof(struct sockaddr_in);
@@ -155,12 +114,55 @@ int main(int argc, char **argv)
 		printf("Longueur du message: %li\n",strlen(buf));
 	
 		char adr_ip[INET_ADDRSTRLEN];
-		if(inet_ntop(AF_INET,&client.sin_addr,adr_ip,INET_ADDRSTRLEN)==NULL){
+		if(inet_ntop(AF_INET6,&client.sin_addr,adr_ip,INET_ADDRSTRLEN)==NULL){
 			perror("inet_ntop\n");
 			exit(EXIT_FAILURE);		
 		}
 		printf("Ip source: %s\n",adr_ip);
 		printf("Numero de port de l'expediteur: %d\n",client.sin_port);
+		// close the socket
+		close(sockfd);
+	}
+	if(strcmp(argv[3],"set")==0){
+		//check nb args == 6
+		//On envoie un message
+		struct sockaddr_in dest;
+
+		// check the number of args on command line
+		if(argc != 6)
+		{
+		    printf("USAGE: %s @dest port_num string\n", argv[0]);
+		    exit(-1);
+		}
+		port_nb=atoi(argv[2]);
+		// socket factory
+		if((sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) == -1)
+		{
+		    perror("socket\n");
+		exit(EXIT_FAILURE);
+		}
+
+		// init remote addr structure and other params
+		dest.sin_family = AF_INET6;
+		dest.sin_port   = port_nb;
+		addrlen         = sizeof(struct sockaddr_in);
+
+		// get addr from command line and convert it
+		if(inet_pton(AF_INET,argv[1],&dest.sin_addr) != 1)
+		{
+		    perror("inet_pton\n");
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
+	
+		// send string
+		if(sendto(sockfd,argv[3],strlen(argv[3]),0,(struct sockaddr *)&dest,addrlen) == -1)
+		{
+		    perror("sendto\n");
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
+
 		// close the socket
 		close(sockfd);
 	}
