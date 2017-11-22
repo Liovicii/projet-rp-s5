@@ -66,7 +66,7 @@ int main(int argc, char * argv[]){
     // initialisations des variables
     int port, sock, length, convert;
     struct sockaddr_in6 addr_server;
-    char ip[IPV6_LENGTH];
+    char ip[INET6_ADDRSTRLEN];
 
     // vérification des arguments
     if(argc != 3){
@@ -101,9 +101,9 @@ int main(int argc, char * argv[]){
             perror("inet_pton");
         }
     }
-	
-	printf("Return 0 test\n");
-	return 0;
+    
+    printf("Return 0 test\n");
+    return 0;
 
     // initialisation socket
     PERRORMSG((sock=socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)), "socket"); 
@@ -121,7 +121,7 @@ int main(int argc, char * argv[]){
         exit(EXIT_FAILURE);
     }
 
-	// communications du serveur 
+    // communications du serveur 
 
     // fermeture du socket
     PERRORMSG(close(sock), "close");
