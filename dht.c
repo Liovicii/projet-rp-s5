@@ -10,27 +10,27 @@ int port_valide(char * port){
 }
 
 
-int parse_hostname(char * hostname, char * ip){
-	struct addrinfo hints, *result, *p;
+int parse_hostname(char * hostname, char * port, char * ip){
+	struct addrinfo hints, *result;
 	struct sockaddr_in6 *h;
     int s;
 	
 	memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET6;         /* Allow IPv6 */
-    hints.ai_socktype = SOCK_DGRAM;     /* Datagram socket */
+    hints.ai_family = AF_INET6;         /* IPv6 */
+    hints.ai_socktype = SOCK_DGRAM;     /* Datagram */
     hints.ai_flags = 0;
-    hints.ai_protocol = IPPROTO_UDP;    /* Protocol UDP */
+    hints.ai_protocol = IPPROTO_UDP;    /* Protocole UDP */
 
-    s = getaddrinfo(hostname, "http", &hints, &result);
+	// on résoud le hostname
+    s = getaddrinfo(hostname, port, &hints, &result);
     if(s != 0){
         return ERROR;
     }
     
-    for(p = result; p != NULL; p = p->ai_next){
- 		h = (struct sockaddr_in6 *) p->ai_addr;
- 		strcpy(ip, inet_ntoa(h->sin6_addr));	
-    }
-    
+    // on convertie une adresse binaire en adresse char *
+ 	h = (struct sockaddr_in6 *) result->ai_addr;
+ 	inet_ntop(AF_INET6, &(h->sin6_addr), ip, INET6_ADDRSTRLEN);	
+
     freeaddrinfo(result);
     return 0;
 }

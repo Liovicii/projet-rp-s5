@@ -49,10 +49,11 @@ int port_valide(char * port);
  * \brief Détermine une adresse IPv6 pour un nom de hôte.
  *
  * \param hostname Un nom de hôte
+ * \param port Numero de port
  * \param ip Pointeur où l'on stock l'adresse IP
  * \return 0 si tout se passe bien, -1 sinon.
  */
-int parse_hostname(char * hostname, char * ip);
+int parse_hostname(char * hostname, char * port, char * ip);
 
 
 
