@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	if(strcmp(argv[3],"get")==0){
 		//check nb args ==5
 		//On envoie juste un message
-		struct sockaddr_in dest;
+		struct sockaddr_in6 dest;
 
 		// check the number of args on command line
 		if(argc != 5)
@@ -40,14 +40,20 @@ int main(int argc, char **argv)
 		}
 
 		// init remote addr structure and other params
-		dest.sin_family = AF_INET6;
-		dest.sin_port   = port_nb;
-		addrlen         = sizeof(struct sockaddr_in);
+		dest.sin6_family = AF_INET6;
+		dest.sin6_port   = htons(port_nb);
+		dest.sin6_flowinfo = 0;
+		addrlen         = sizeof(struct sockaddr_in6);
 
 		printf("%s\n",argv[1]);
 		// get addr from command line and convert it
-		if(inet_pton(AF_INET6,argv[1],&dest.sin_addr) != 1)
+		int ret;
+		if((ret=inet_pton(AF_INET6,argv[1],&dest.sin6_addr)) != 1)
 		{
+			if (ret == 0){
+				fprintf(stderr,"adresse invalide\n");
+				exit(EXIT_FAILURE);
+			}
 		    perror("inet_pton\n");
 			close(sockfd);
 			exit(EXIT_FAILURE);
@@ -65,8 +71,8 @@ int main(int argc, char **argv)
 		close(sockfd);
 		
 				//On attends une reponse
-		struct sockaddr_in my_addr;
-		struct sockaddr_in client;
+		struct sockaddr_in6 my_addr;
+		struct sockaddr_in6 client;
 		/*
 		// check the number of args on command line
 		if(argc != 2)
@@ -86,10 +92,10 @@ int main(int argc, char **argv)
 	
 		printf("%d\n",INADDR_ANY);
 		// init local addr structure and other params
-		my_addr.sin_family      = AF_INET6;
-		my_addr.sin_port        = port_nb;
-		my_addr.sin_addr.s_addr = INADDR_ANY;
-		addrlen                 = sizeof(struct sockaddr_in);
+		my_addr.sin6_family      = AF_INET6;
+		my_addr.sin6_port        = port_nb;
+		my_addr.sin6_addr		 = in6addr_any;
+		addrlen                 = sizeof(struct sockaddr_in6);
 		memset(buf,'\0',1024);
 
 		// bind addr structure with socket
@@ -114,19 +120,19 @@ int main(int argc, char **argv)
 		printf("Longueur du message: %li\n",strlen(buf));
 	
 		char adr_ip[INET_ADDRSTRLEN];
-		if(inet_ntop(AF_INET6,&client.sin_addr,adr_ip,INET_ADDRSTRLEN)==NULL){
+		if(inet_ntop(AF_INET6,&client.sin6_addr,adr_ip,INET_ADDRSTRLEN)==NULL){
 			perror("inet_ntop\n");
 			exit(EXIT_FAILURE);		
 		}
 		printf("Ip source: %s\n",adr_ip);
-		printf("Numero de port de l'expediteur: %d\n",client.sin_port);
+		printf("Numero de port de l'expediteur: %d\n",client.sin6_port);
 		// close the socket
 		close(sockfd);
 	}
 	if(strcmp(argv[3],"set")==0){
 		//check nb args == 6
 		//On envoie un message
-		struct sockaddr_in dest;
+		struct sockaddr_in6 dest;
 
 		// check the number of args on command line
 		if(argc != 6)
@@ -136,19 +142,19 @@ int main(int argc, char **argv)
 		}
 		port_nb=atoi(argv[2]);
 		// socket factory
-		if((sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) == -1)
+		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
 		    perror("socket\n");
 		exit(EXIT_FAILURE);
 		}
 
 		// init remote addr structure and other params
-		dest.sin_family = AF_INET6;
-		dest.sin_port   = port_nb;
-		addrlen         = sizeof(struct sockaddr_in);
+		dest.sin6_family = AF_INET6;
+		dest.sin6_port   = htons(port_nb);
+		addrlen         = sizeof(struct sockaddr_in6);
 
 		// get addr from command line and convert it
-		if(inet_pton(AF_INET,argv[1],&dest.sin_addr) != 1)
+		if(inet_pton(AF_INET6,argv[1],&dest.sin6_addr) != 1)
 		{
 		    perror("inet_pton\n");
 			close(sockfd);
@@ -156,7 +162,7 @@ int main(int argc, char **argv)
 		}
 	
 		// send string
-		if(sendto(sockfd,argv[3],strlen(argv[3]),0,(struct sockaddr *)&dest,addrlen) == -1)
+		if(sendto(sockfd,argv[4],strlen(argv[4]),0,(struct sockaddr *)&dest,addrlen) == -1)
 		{
 		    perror("sendto\n");
 			close(sockfd);
