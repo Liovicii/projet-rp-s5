@@ -60,7 +60,7 @@ int main(int argc, char * argv[]){
 
     // initialisation adresse IP du serveur
     addr_server.sin6_family = AF_INET6;
-    addr_server.sin6_port = port;
+    addr_server.sin6_port = htons(port);
     length = sizeof(struct sockaddr_in6);
 /*
 	// affichages tests
