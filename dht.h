@@ -101,5 +101,14 @@ int parse_hostname(char * hostname, char * port, char * ip);
 int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
 
 
+/* 
+ * \fn int check_hash (char * hash)
+ * \brief Verifie qu'un hash est valide
+ *
+ * \param hash un hash au format string
+ * \return 0 si le hash est valide, -1 sinon
+ */
+int check_hash(char * hash);
+
 
 #endif
