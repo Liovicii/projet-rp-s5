@@ -64,9 +64,9 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, length, convert;
+    int port, sock, length;
     struct sockaddr_in6 addr_server;
-    char ip[INET6_ADDRSTRLEN];
+    //char ip[INET6_ADDRSTRLEN];
 
     // vérification des arguments
     if(argc != 3){
@@ -84,26 +84,9 @@ int main(int argc, char * argv[]){
     }
 
     // convertir l'argument en adresse IPv6
-    convert = inet_pton(AF_INET6,argv[1],(void*)&addr_server.sin6_addr.s6_addr);
-    if(convert <= 0){
-        if(convert == 0){
-            // IPv6 invalide, on regarde si on a un nom de domaine
-            if(parse_hostname(argv[1], argv[2], ip) == ERROR){
-                fprintf(stderr, "Erreur: getaddrinfo: %s\n", argv[1]);
-                usage(argv[0]);
-            }
-            else{
-                printf("%s résolu en %s\n", argv[1], ip);
-            }
-        
-        }
-        else{
-            perror("inet_pton");
-        }
-    }
-    
-    printf("Return 0 test\n");
-    return 0;
+    if(convert_ipv6(argv[1], argv[2], &addr_server) == ERROR){
+    	usage(argv[0]);
+    } 
 
     // initialisation socket
     PERRORMSG((sock=socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)), "socket"); 
@@ -121,7 +104,10 @@ int main(int argc, char * argv[]){
         exit(EXIT_FAILURE);
     }
 
+
     // communications du serveur 
+	
+
 
     // fermeture du socket
     PERRORMSG(close(sock), "close");

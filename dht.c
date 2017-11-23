@@ -34,3 +34,29 @@ int parse_hostname(char * hostname, char * port, char * ip){
     freeaddrinfo(result);
     return 0;
 }
+
+
+int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
+	int convert;
+	char ip[INET6_ADDRSTRLEN];
+	convert = inet_pton(AF_INET6, ip, (void*)addr->sin6_addr.s6_addr);
+    if(convert <= 0){
+        if(convert == 0){
+            // IPv6 invalide, on regarde si on a un nom de domaine
+            if(parse_hostname(arg_ip, arg_port, ip) == ERROR){
+                fprintf(stderr, "Erreur: getaddrinfo unknown arg %s\n", arg_ip);
+                return ERROR;
+            }
+            else{
+			    inet_pton(AF_INET6,ip,(void*)addr->sin6_addr.s6_addr);
+				printf("%s résolu en %s\n", arg_ip, ip);
+				return 0;
+            }
+        }
+        else{
+            perror("inet_pton");
+  			return ERROR;     
+        }
+    }
+    return 0;
+}

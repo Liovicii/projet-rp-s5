@@ -14,7 +14,6 @@
 
 
 #define ERROR       -1
-#define IPV6_LENGTH 100
 
 
 /* Définition des types pour les messages */
@@ -38,7 +37,8 @@
  * \brief Vérifie si un numéro de port est valide.
  *
  * \param port Un numéro de port sous forme de string.
- * \return Le numero de port si le paramètre est un numéro de port valide, -1 sinon.
+ * \return Le numero de port si le paramètre est 
+ *  un numéro de port valide, -1 sinon.
  */
 int port_valide(char * port);
 
@@ -48,13 +48,26 @@ int port_valide(char * port);
  * \fn int parse_hostname (char * hostname, char * ip)
  * \brief Détermine une adresse IPv6 pour un nom de hôte.
  *
- * \param hostname Un nom de hôte
- * \param port Numero de port
+ * \param hostname Un nom de hôte à résoudre
+ * \param port Numero de port (en string)
  * \param ip Pointeur où l'on stock l'adresse IP
  * \return 0 si tout se passe bien, -1 sinon.
  */
 int parse_hostname(char * hostname, char * port, char * ip);
 
+
+
+/**
+ * \fn convert_ipv6 (char * arg_ip, char * arg_port, struct sockaddr_in6 * addr)
+ * \brief Vérifie qu'une adresse IPv6 en format char* est valide et la stock
+ *  dans la structure addr.
+ *
+ * \param arg_ip Adresse IPv6 entrée par l'utilisateur.
+ * \param arg_port Numéro de port entré par l'utilisateur.
+ * \param addr Structure dans laquelle on stock l'adresse IP.
+ * \return 0 si tout se passe bien, -1 sinon.
+ */
+int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
 
 
 
