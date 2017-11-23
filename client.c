@@ -165,14 +165,14 @@ int main(int argc, char **argv)
 
 		//On defini le type a SET
 		printf("Coucou\n");
-		/*
+		
 		int type_en=SET;
-		itoa(type_en,type,2);
-		//snprintf
+		//itoa(type_en,type,2);
+		snprintf(type,2,"%d",type_en);
 		//strncpy(type,,1);
 		//type=(char)SET;
 		printf("Type: %s\n",type);
-		*/
+		
 		memset(buf,'\0',MESS_MAX_SIZE);
 		
 		//On ajoute le type a buf
@@ -187,16 +187,17 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 		//on recupere la longeur du hash
-		strncpy(length,(char *)strlen(argv[4]),2);
-		printf("%s\n",length);
+		int taille_hash=strlen(argv[4]);
+		snprintf(length,3,"%d",taille_hash);
 		//length=(char)strlen(argv[4]);
 		// On concatene la longuer a buf
 		strncat(buf,length,2);
 		//On concatene l'ip au buffer
+		//il faudrait que l'ip fasse 46 caracteres
 		strncat(buf,ip6,INET6_ADDRSTRLEN);
 		//On concatene le hash au buffer
 		strncat(buf,argv[4],strlen(argv[4]));
-		
+		printf("%s\n",buf);
 		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
