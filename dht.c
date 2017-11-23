@@ -62,6 +62,17 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
 }
 
 
+int check_hash(char * hash){	
+	int lg=strlen(hash);	
+	if (lg<65){
+		return ERROR;
+	}
+	if(lg>TAILLE_MAX_HASH){
+		return ERROR;
+	}
+	return 0;
+}
+
 
 /***** TABLE DHT *****/
 
