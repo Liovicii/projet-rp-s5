@@ -29,7 +29,8 @@ int main(int argc, char **argv)
     char buf[MESS_MAX_SIZE];
     socklen_t addrlen;
 	char ip6[INET6_ADDRSTRLEN];
-	
+	char type[1];
+	char length[2];
 
 	//On regarde si c'est get ou set
 	if(argc<4){
@@ -162,13 +163,39 @@ int main(int argc, char **argv)
 		}
 		port_nb=atoi(argv[2]);
 
+		//On defini le type a SET
+		printf("Coucou\n");
+		/*
+		int type_en=SET;
+		itoa(type_en,type,2);
+		//snprintf
+		//strncpy(type,,1);
+		//type=(char)SET;
+		printf("Type: %s\n",type);
+		*/
+		memset(buf,'\0',MESS_MAX_SIZE);
+		
+		//On ajoute le type a buf
+		strncat(buf,type,1);
+			
 		//Stockage ipv6 dans ip6
 		strncpy(ip6,argv[1],strlen(argv[1]));
 
+		//On regarde si le hash est valide
 		if(check_hash(argv[4])==-1){
 			fprintf(stderr,"usage: le hash n'est pas assez long\n");
 			exit(EXIT_FAILURE);
 		}
+		//on recupere la longeur du hash
+		strncpy(length,(char *)strlen(argv[4]),2);
+		printf("%s\n",length);
+		//length=(char)strlen(argv[4]);
+		// On concatene la longuer a buf
+		strncat(buf,length,2);
+		//On concatene l'ip au buffer
+		strncat(buf,ip6,INET6_ADDRSTRLEN);
+		//On concatene le hash au buffer
+		strncat(buf,argv[4],strlen(argv[4]));
 		
 		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
@@ -181,7 +208,7 @@ int main(int argc, char **argv)
 		dest.sin6_family = AF_INET6;
 		dest.sin6_port   = htons(port_nb);
 		addrlen         = sizeof(struct sockaddr_in6);
-
+		
 		// get addr from command line and convert it
 		if(inet_pton(AF_INET6,argv[1],&dest.sin6_addr) != 1)
 		{
@@ -191,7 +218,7 @@ int main(int argc, char **argv)
 		}
 	
 		// send string
-		if(sendto(sockfd,argv[4],strlen(argv[4]),0,(struct sockaddr *)&dest,addrlen) == -1)
+		if(sendto(sockfd,buf,strlen(buf),0,(struct sockaddr *)&dest,addrlen) == -1)
 		{
 		    perror("sendto\n");
 			close(sockfd);
