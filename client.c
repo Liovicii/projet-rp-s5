@@ -6,13 +6,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include "dht.h"
+
+#define MESS_MAX_SIZE 1049
+#define TAILLE_MAX_HASH 1000
+
+int check_hash(char * hash){	
+	int lg=strlen(hash);	
+	if (lg<65){
+		return -1;
+	}
+	if(lg>TAILLE_MAX_HASH){
+		return -1;
+	}
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
 	int port_nb;
     int sockfd;
-    char buf[1024];
+    char buf[MESS_MAX_SIZE];
     socklen_t addrlen;
+	char ip6[INET6_ADDRSTRLEN];
+	
 
 	//On regarde si c'est get ou set
 	if(argc<4){
@@ -31,7 +48,10 @@ int main(int argc, char **argv)
 		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		    exit(-1);
 		}
+
+		//Conversion en entier du port
 		port_nb=atoi(argv[2]);
+		
 		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
@@ -96,7 +116,7 @@ int main(int argc, char **argv)
 		my_addr.sin6_port        = port_nb;
 		my_addr.sin6_addr		 = in6addr_any;
 		addrlen                 = sizeof(struct sockaddr_in6);
-		memset(buf,'\0',1024);
+		memset(buf,'\0',MESS_MAX_SIZE);
 
 		// bind addr structure with socket
 		if(bind(sockfd,(struct sockaddr *)&my_addr,addrlen) == -1)
@@ -108,7 +128,7 @@ int main(int argc, char **argv)
 	 	//sleep(20);
 		//netstat -apu
 		// reception de la chaine de caracteres
-		if(recvfrom(sockfd,buf,1024,0,(struct sockaddr *)&client,&addrlen) == -1)
+		if(recvfrom(sockfd,buf,MESS_MAX_SIZE,0,(struct sockaddr *)&client,&addrlen) == -1)
 		{
 		  perror("recvfrom");
 		  close(sockfd);
@@ -137,10 +157,19 @@ int main(int argc, char **argv)
 		// check the number of args on command line
 		if(argc != 6)
 		{
-		    printf("USAGE: %s @dest port_num string\n", argv[0]);
+		    printf("USAGE: %s @dest port_num string ip\n", argv[0]);
 		    exit(-1);
 		}
 		port_nb=atoi(argv[2]);
+
+		//Stockage ipv6 dans ip6
+		strncpy(ip6,argv[1],strlen(argv[1]));
+
+		if(check_hash(argv[4])==-1){
+			fprintf(stderr,"usage: le hash n'est pas assez long\n");
+			exit(EXIT_FAILURE);
+		}
+		
 		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
