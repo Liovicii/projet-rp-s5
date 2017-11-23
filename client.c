@@ -8,20 +8,6 @@
 #include <arpa/inet.h>
 #include "dht.h"
 
-#define MESS_MAX_SIZE 1049
-#define TAILLE_MAX_HASH 1000
-
-int check_hash(char * hash){	
-	int lg=strlen(hash);	
-	if (lg<65){
-		return -1;
-	}
-	if(lg>TAILLE_MAX_HASH){
-		return -1;
-	}
-	return 0;
-}
-
 int main(int argc, char **argv)
 {
 	int port_nb;
