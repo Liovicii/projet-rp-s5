@@ -13,8 +13,8 @@
 #include <string.h>
 
 
-#define ERROR       -1
-
+#define ERROR         -1
+#define MESS_MAX_SIZE 1049 // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
 
 /* Définition des types pour les messages */
 #define GET 1
