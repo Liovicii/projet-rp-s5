@@ -64,9 +64,10 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, length;
+    int port, sock, r;
+    socklen_t length;
     struct sockaddr_in6 addr_server;
-    //char ip[INET6_ADDRSTRLEN];
+    char buf[MESS_MAX_SIZE];
 
     // vérification des arguments
     if(argc != 3){
@@ -106,8 +107,14 @@ int main(int argc, char * argv[]){
 
 
     // communications du serveur 
+    r=recvfrom(sock,buf,MESS_MAX_SIZE,0,(struct sockaddr*)&addr_server,&length);
+    if(r == ERROR){
+        perror("recvfrom");
+        usage(argv[0]);
+    }
     
-
+    // affichage du message recu
+    printf("Message recu:\n%s\n", buf);
 
     // fermeture du socket
     PERRORMSG(close(sock), "close");
