@@ -60,3 +60,47 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
     }
     return 0;
 }
+
+
+
+/***** TABLE DHT *****/
+
+DHT * init_dht(char * hash){
+	DHT * table = malloc(sizeof(struct hash_cel));
+	// on vérifie que le malloc à bien fonctinner
+	if(table == NULL){
+		fprintf(stderr, "Erreur malloc: allocation echoue\n");
+		exit(EXIT_FAILURE);
+	}
+	// on vérifie que le hash est valide
+	if(check_hash(hash) == ERROR){
+		fprintf(stderr, "Erreur: hash invalide\n");
+		exit(EXIT_FAILURE);
+	}
+	table->val = hash;
+	table->want = NULL;
+	table->have = NULL;
+	return table;
+}
+
+void supp_dht(){
+
+}
+
+void insert_ip_want(){
+
+}
+
+void insert_ip_have(){
+
+}
+
+void insert_hash(){
+
+}
+
+void get_hash(){
+
+}
+
+

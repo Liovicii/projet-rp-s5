@@ -14,7 +14,9 @@
 
 
 #define ERROR         -1
-#define MESS_MAX_SIZE 1049 // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
+#define MESS_MAX_SIZE 1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
+#define PARTITION     26+10 // alphabet + chiffres base 10
+#define TAILLE_MAX_HASH 1000 // taille max d'un hash
 
 /* Définition des types pour les messages */
 #define GET 1
@@ -30,6 +32,35 @@
  */
 #define PERRORMSG(cmd, msg) if((cmd) == ERROR) \
     do{perror(msg); exit(EXIT_FAILURE);}while(0);
+
+
+/*
+ * \struct ip_cel dht.h
+ * \brief Liste chainée de IP
+ */
+typedef struct ip_cel{
+	char val[INET6_ADDRSTRLEN];
+	struct ip * next;
+}Ip;
+
+
+/*
+ * \struct hash_cel dht.h
+ * \brief Liste chainée de hash.
+ */
+typedef struct hash_cel{
+	char val[TAILLE_MAX_HASH];
+	struct hash_cel * next;
+	struct ip_cel * want;
+	struct ip_cel * have;
+}DHT;
+
+
+/*
+ *
+ */
+
+
 
 
 /**
