@@ -85,7 +85,7 @@ int main(int argc, char * argv[]){
 
     // convertir l'argument en adresse IPv6
     if(convert_ipv6(argv[1], argv[2], &addr_server) == ERROR){
-    	usage(argv[0]);
+        usage(argv[0]);
     } 
 
     // initialisation socket
@@ -106,7 +106,7 @@ int main(int argc, char * argv[]){
 
 
     // communications du serveur 
-	
+    
 
 
     // fermeture du socket
