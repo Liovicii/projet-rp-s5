@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 		printf("%d\n",INADDR_ANY);
 		// init local addr structure and other params
 		my_addr.sin6_family      = AF_INET6;
-		my_addr.sin6_port        = port_nb;
+		my_addr.sin6_port        = atoi(argv[2]);
 		my_addr.sin6_addr		 = in6addr_any;
 		addrlen                 = sizeof(struct sockaddr_in6);
 		memset(buf,'\0',MESS_MAX_SIZE);
@@ -111,8 +111,7 @@ int main(int argc, char **argv)
 		    printf("USAGE: %s @dest port_num put hash ip\n", argv[0]);
 		    exit(-1);
 		}
-		port_nb=atoi(argv[2]);
-		
+				
 		int type_en=SET;
 		//itoa(type_en,type,2);
 		snprintf(type,2,"%d",type_en);
@@ -163,7 +162,7 @@ int main(int argc, char **argv)
 
 		// init remote addr structure and other params
 		dest.sin6_family = AF_INET6;
-		dest.sin6_port   = htons(port_nb);
+		dest.sin6_port   = htons(atoi(argv[2]));
 		addrlen         = sizeof(struct sockaddr_in6);
 		
 		// get addr from command line and convert it
