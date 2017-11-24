@@ -1,4 +1,5 @@
 #include "dht.h"
+#include "fctsocket.h"
 
 
 /**
@@ -64,8 +65,7 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, r;
-    socklen_t length;
+    int port, sock;
     struct sockaddr_in6 addr_server;
     char buf[MESS_MAX_SIZE];
 
@@ -90,34 +90,23 @@ int main(int argc, char * argv[]){
     } 
 
     // initialisation socket
-    PERRORMSG((sock=socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)), "socket"); 
+    sock = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
     // initialisation adresse IP du serveur
     addr_server.sin6_family = AF_INET6;
     addr_server.sin6_port = htons(port);
-    length = sizeof(struct sockaddr_in6);
 
     // on attache l'adresse IP du serveur au socket
-    if(bind(sock, (struct sockaddr *)&addr_server, length) == ERROR){
-        perror("bind");
-        printf("errno: %d\n", errno);
-        PERRORMSG(close(sock), "close");
-        exit(EXIT_FAILURE);
-    }
-
+	lier_socket6(sock, addr_server);
 
     // communications du serveur 
-    r=recvfrom(sock,buf,MESS_MAX_SIZE,0,(struct sockaddr*)&addr_server,&length);
-    if(r == ERROR){
-        perror("recvfrom");
-        usage(argv[0]);
-    }
-    
+	recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
+	 
     // affichage du message recu
     printf("Message recu:\n%s\n", buf);
 
     // fermeture du socket
-    PERRORMSG(close(sock), "close");
+    fermer_socket(sock);
 
     // le programme s'est bien déroulé 
     return EXIT_SUCCESS;
