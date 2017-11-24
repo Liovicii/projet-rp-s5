@@ -160,13 +160,14 @@ char * get_hash(char * hash, DHT * table);
 
 
 /*
- * \fn    
- * \brief 
+ * \fn int put_hash (char * hash, char * ip, DHT * table;
+ * \brief Ajoute une adresse IP qui possède un hash
  *
- * \param 
- * \param 
- * \param 
- * \return 
+ * \param hash Le hash associé à l'adresse IP
+ * \param ip L'adresse IP de la machine qui possède le hash
+ * \param table La table dans laquelle on stockera l'entrée
+ * \return 0 si tu se passe bien, -1 en cas d'erreur, 2 si 
+ *  l'adresse IP est déjà présente dans la liste.
  */
 int put_hash(char * hash, char * ip, DHT * table);
 
@@ -179,7 +180,7 @@ int put_hash(char * hash, char * ip, DHT * table);
  * \param hash un hash
  * \param table une table de hash
  */
-void delete_hash(char * hash, DHT * table);
+void delete_hash(char * hash, DHT ** table);
 
 
 /*

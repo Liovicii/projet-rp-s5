@@ -435,9 +435,9 @@ int put_hash(char * hash, char * ip, DHT * table){
 
 
 
-void delete_hash(char * hash, DHT * table){
+void delete_hash(char * hash, DHT ** table){
     
-    DHT * tmp_dht = table, *old = NULL;
+    DHT * tmp_dht = *table, *old = NULL;
     
     // verif. args.
     if(hash == NULL){
@@ -465,8 +465,9 @@ void delete_hash(char * hash, DHT * table){
     
     // suppression du hash_cel
     if(old == NULL){
-        table = tmp_dht->next;
-        printf("TABLE: %s\n", table->val);
+        // cas particulier de la suppression du 1er élément
+        *table = (*table)->next;
+        printf("TABLE: %s\n", (*table)->val);
     }
     else{
         old->next = tmp_dht->next;
