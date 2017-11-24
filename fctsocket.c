@@ -121,3 +121,19 @@ void remplir_type(int val_type, char * type){
 	type[1]=('\0');
 	return;
 }
+
+void extract_string(char * entree,char * sortie, int indice, int t_a_extr){
+	strncpy(sortie,entree+indice,t_a_extr);
+	sortie[(t_a_extr)]='\0';
+	return;
+}
+
+int get_length_ip(char * lg){
+	return ((int)lg[0]+'0');
+}
+
+int get_length_hash(char * lg){
+	return ((int)lg[1]+'0');
+}
+
+

@@ -10,6 +10,9 @@
 #include "dht.h"
 #include "fctsocket.h"
 
+#define LENGTH_TYPE 1
+#define LENGTH_LG 2
+
 int main(int argc, char **argv)
 {
     int sockfd;
@@ -75,6 +78,22 @@ int main(int argc, char **argv)
 		}
 		printf("Ip source: %s\n",adr_ip);
 		printf("Numero de port de l'expediteur: %d\n",client.sin6_port);
+		
+
+		char type_m[LENGTH_TYPE+1];
+		char lg_m[LENGTH_LG+1];
+		extract_string(buf,type_m,0,LENGTH_TYPE);
+		extract_string(buf,lg_m,1,LENGTH_LG);
+
+		char hash[TAILLE_MAX_HASH];
+		char recup[get_length_ip(length)+1];
+		extract_string(buf,recup,3,get_length_ip(lg_m));
+		extract_string(buf,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
+
+		printf("Val type: %s\n",type_m);
+		printf("Val lg: %s\n",lg_m);
+		printf("Val ip mes: %s\n",recup);		
+		printf("Val h mes: %s\n",hash);	
 		// close the socket
 		close(sockfd);
 	}
@@ -104,9 +123,24 @@ int main(int argc, char **argv)
 		
 		creation_chaine(type,length,argv[5],argv[4],buf);
 		
-		char recup[3];
-		strncpy(recup,buf+1,2);
-		recup[3]='\0';
+
+		
+		char type_m[LENGTH_TYPE+1];
+		char lg_m[LENGTH_LG+1];
+		extract_string(buf,type_m,0,LENGTH_TYPE);
+		extract_string(buf,lg_m,1,LENGTH_LG);
+
+		char hash[TAILLE_MAX_HASH];
+		char recup[get_length_ip(length)+1];		
+		extract_string(buf,recup,3,get_length_ip(lg_m));
+		extract_string(buf,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
+
+		printf("Val type: %s\n",type_m);
+		printf("Val lg: %s\n",lg_m);
+		printf("Val ip mes: %s\n",recup);		
+		printf("Val h mes: %s\n",hash);
+		
+		printf("Message complet: %s\n",buf);
 
 		// On creer le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);	
