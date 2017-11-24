@@ -9,7 +9,7 @@ server: dht.o
 	gcc server.c $< -o $@ $(CFLAGS)
 
 client: client.c dht.o
-	gcc client.c -o $@ $(CFLAGS)
+	gcc client.c $< -o $@ $(CFLAGS)
 
 dht.o: dht.c dht.h
 	gcc -c $< $(CFLAGS) 
