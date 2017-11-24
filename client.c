@@ -160,13 +160,13 @@ int main(int argc, char **argv)
 		printf("Type: %s\n",type);
 		
 		memset(buf,'\0',MESS_MAX_SIZE);
-		
-		//On ajoute le type a buf
-		strncat(buf,type,1);
+
 			
 		//Stockage ipv6 dans ip6
-		strncpy(ip6,argv[1],strlen(argv[1]));
-
+		int taille_ip=strlen(argv[1]);
+		printf("Message: %s\n",argv[1]);
+		strncpy(ip6,argv[1],INET6_ADDRSTRLEN);
+		printf("Message: %s\n",ip6);
 		//On regarde si le hash est valide
 		if(check_hash(argv[4])==-1){
 			fprintf(stderr,"usage: le hash n'est pas assez long\n");
@@ -174,16 +174,44 @@ int main(int argc, char **argv)
 		}
 		//on recupere la longeur du hash
 		int taille_hash=strlen(argv[4]);
-		snprintf(length,3,"%d",taille_hash);
+		
 		//length=(char)strlen(argv[4]);
+		int longueur_message=(taille_hash<<6)+taille_ip;
+		printf("Longueur du message: %d\n",longueur_message);
+		printf("Longueur ip: %d\n",longueur_message-((longueur_message>>6)<<6));
+		printf("Longueur hash: %d\n",(longueur_message>>6));
+
+		//snprintf(&length[0],2,"%c",taille_ip);
+		//snprintf(&length[1],2,"%c",taille_hash);
+		length[0]=(char)taille_ip-'0';
+		length[1]=(char)taille_hash-'0';
+		printf("char 1: (%c)\n",length[0]);
+		printf("char 2: (%c)\n",length[1]);
+
+		
+				
+		//On ajoute le type a buf
+		strncat(buf,type,1);
 		// On concatene la longuer a buf
-		strncat(buf,length,2);
+		strncat(buf,length,strlen(length));
+		buf[4]='\0';
+		printf("Concat longueur: %s\n",buf);
 		//On concatene l'ip au buffer
 		//il faudrait que l'ip fasse 46 caracteres
+		//printf("Message: %s\n",ip6);
 		strncat(buf,ip6,INET6_ADDRSTRLEN);
+		printf("Message: %s\n",buf);
 		//On concatene le hash au buffer
 		strncat(buf,argv[4],strlen(argv[4]));
 		printf("%s\n",buf);
+
+
+		char recup[3];
+		strncpy(recup,buf+1,2);
+		recup[3]='\0';
+		printf("Recup: %s\n",recup);
+		printf("Longueur ip: %d\n",(int)recup[0]+'0');
+		printf("Longueur hash: %d\n",(int)recup[1]+'0');
 		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
