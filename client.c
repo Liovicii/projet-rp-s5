@@ -40,10 +40,16 @@ int main(int argc, char **argv)
 		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 		// on initialise la structure
-		dest=initv6(atoi(argv[2]));
+		//dest=initv6(atoi(argv[2]));
+		
+		dest.sin6_family = AF_INET6;
+		dest.sin6_port   = htons(atoi(argv[2]));
+		
+		printf("desc fichier: %d\n",sockfd);
 		//On initialise addrlen
 		// On initialise l'ip du socket
-		setip6(argv[1],dest,sockfd);
+		printf("IP lue %s\n",argv[1]);
+		setip6(argv[1],&dest,sockfd);
 		// On envoie le message
 		printf("On va envoyer le hash\n");
 		envoyer_mess6(sockfd,argv[4],dest);
@@ -56,7 +62,7 @@ int main(int argc, char **argv)
 		// On initilise le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 		my_addr=initv6(atoi(argv[2]));
-		setip6("in6addr_any",my_addr,sockfd);
+		setip6("in6addr_any",&my_addr,sockfd);
 		
 		memset(buf,'\0',MESS_MAX_SIZE);
 		//On lie la structure au socket
@@ -70,8 +76,8 @@ int main(int argc, char **argv)
 		printf("Message recu: %s\n",buf);
 		printf("Longueur du message: %d\n",rec);
 	
-		char adr_ip[INET_ADDRSTRLEN];
-		if(inet_ntop(AF_INET6,&client.sin6_addr,adr_ip,INET_ADDRSTRLEN)==NULL){
+		char adr_ip[INET6_ADDRSTRLEN];
+		if(inet_ntop(AF_INET6,&client.sin6_addr,adr_ip,INET6_ADDRSTRLEN)==NULL){
 			perror("inet_ntop\n");
 			exit(EXIT_FAILURE);		
 		}
@@ -80,7 +86,7 @@ int main(int argc, char **argv)
 		// close the socket
 		close(sockfd);
 	}
-	if(strcmp(argv[3],"put")==0){
+	else if(strcmp(argv[3],"put")==0){
 		//check nb args == 6
 		//On envoie un message
 		struct sockaddr_in6 dest;

@@ -32,13 +32,15 @@ struct sockaddr_in6 initv6(int port){
 	return dest;
 }
 
-void setip6(char * ip,struct sockaddr_in6 dest,int sockfd){
+void setip6(char * ip,struct sockaddr_in6 * dest,int sockfd){
 	int ret;
+	
 	if(strcmp("in6addr_any",ip)==0){
-		dest.sin6_addr=in6addr_any;
+		dest->sin6_addr=in6addr_any;
 	}
 	else{
-		if((ret=inet_pton(AF_INET6,ip,&dest.sin6_addr)) != 1)
+	
+		if((ret=inet_pton(AF_INET6,ip,&dest->sin6_addr)) != 1)
 		{
 			if (ret == 0){
 				fprintf(stderr,"adresse invalide\n");
