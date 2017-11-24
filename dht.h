@@ -154,6 +154,7 @@ void affiche_dht (DHT * table);
  * \param hash Un hash
  * \param table Un pointeur vers une table
  * \return Une chaine de caractère contenant la liste des IPs
+ *         la forme de la chaine est " IP IP... IP"
  */
 char * get_hash(char * hash, DHT * table);
 
@@ -168,5 +169,17 @@ char * get_hash(char * hash, DHT * table);
  * \return 
  */
 int put_hash(char * hash, char * ip, DHT * table);
+
+
+
+/*
+ * \fn void delete_hash (char * hash, DHT * table)
+ * \brief supprime un hash d'une table
+ *
+ * \param hash un hash
+ * \param table une table de hash
+ */
+void delete_hash(char * hash, DHT * table);
+
 
 #endif

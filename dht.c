@@ -84,7 +84,11 @@ DHT * init_dht(char * hash){
         exit(EXIT_FAILURE);
     }
     strncpy(table->val, hash, strlen(hash));
-    table->next = NULL;
+   	if(table->val == NULL){
+		fprintf(stderr, "Erreur: init_dht\n");
+		fprintf(stderr,"strncpy failed to copie %s into %s\n",table->val,hash);
+	}
+	table->next = NULL;
     table->want = NULL;
     table->have = NULL;    
     return table;
@@ -92,42 +96,55 @@ DHT * init_dht(char * hash){
 
 
 
+/*
+ * \fn void delete_ip_list (IP * liste)
+ * \brief supprime une liste d'IP
+ *
+ * \param liste une liste d'adresse IP
+ */
+void delete_ip_list(IP * liste){
+	IP *tmp1_ip = liste, *tmp2_ip;
+	if(liste == NULL){
+		printf("Liste already deleted\n");
+		return;
+	}
+    if(tmp1_ip != NULL){
+    	while(tmp1_ip->next != NULL){
+        	tmp2_ip = tmp1_ip;
+            tmp1_ip = tmp1_ip->next;
+            free(tmp2_ip);
+        }
+        free(tmp1_ip);
+		if(tmp1_ip != NULL){
+			fprintf(stderr, "Erreur: delete_ip_list\n");
+			fprintf(stderr, "free failed to delete ip_cel\n");
+		}
+    }
+}
+
+
+
+
 void supp_dht(DHT * table){
     DHT *tmp1_dht = table, *tmp2_dht;
-    IP *tmp1_ip, *tmp2_ip;
     
     // traitement du dernier hash de la liste
     while(tmp1_dht->next != NULL){
     
         // suppression liste want
-        tmp1_ip = tmp1_dht->want;
-        if(tmp1_ip != NULL){
-            while(tmp1_ip->next != NULL){
-                tmp2_ip = tmp1_ip;
-                tmp1_ip = tmp1_ip->next;
-                free(tmp2_ip);
-            }
-            free(tmp1_ip);
-        }
+		delete_ip_list(table->want);
 
         // suppression liste have
-        tmp1_ip = tmp1_dht->have;
-        if(tmp1_ip != NULL){
-            while(tmp1_ip->next != NULL){
-                tmp2_ip = tmp1_ip;
-                tmp1_ip = tmp1_ip->next;
-                free(tmp2_ip);
-            }
-            free(tmp1_ip);
-        }
+		delete_ip_list(table->have);
 
-        // suppression hash_cel
+		// suppression hash_cel
         tmp2_dht = tmp1_dht;
         tmp1_dht = tmp1_dht->next;
         free(tmp2_dht);
     }
     free(tmp1_dht);
 }
+
 
 
 void affiche_dht(DHT * table){
@@ -157,6 +174,7 @@ void affiche_dht(DHT * table){
         tmp_dht = tmp_dht->next;
     }
 }
+
 
 
 
@@ -284,38 +302,38 @@ int insert_hash(char * hash, DHT * table){
  * \return 0 si tout se passe bien, -1 si erreur, NTD(2) si rien à faire
  */
 int insert_ip(IP * liste, char * ip){
-	
-	IP * tmp_ip = liste, *new;
+    
+    IP * tmp_ip = liste, *new;
 
-	// verification des arguments
-	if(liste == NULL){
-		fprintf(stderr, "Erreur: insert_ip\n");
-		fprintf(stderr, "IP liste is NULL\n");
-		return ERROR;
-	}
-	if(ip == NULL){
-		fprintf(stderr, "Erreur: insert_ip\n");
-		fprintf(stderr, "IP [%s] is NULL\n", ip);
-		return ERROR;
-	}
+    // verification des arguments
+    if(liste == NULL){
+        fprintf(stderr, "Erreur: insert_ip\n");
+        fprintf(stderr, "IP liste is NULL\n");
+        return ERROR;
+    }
+    if(ip == NULL){
+        fprintf(stderr, "Erreur: insert_ip\n");
+        fprintf(stderr, "IP [%s] is NULL\n", ip);
+        return ERROR;
+    }
 
-	// insertion IP
-	while(tmp_ip->next != NULL){
-		if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
-			fprintf(stderr, "Erreur: insert_ip\n");
-			fprintf(stderr, "IP %s already in list\n", ip);
-			return NTD;
-		}
-		tmp_ip = tmp_ip->next;
-	}
+    // insertion IP
+    while(tmp_ip->next != NULL){
+        if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
+            fprintf(stderr, "Erreur: insert_ip\n");
+            fprintf(stderr, "IP %s already in list\n", ip);
+            return NTD;
+        }
+        tmp_ip = tmp_ip->next;
+    }
 
-	// creation de l'ip_cel
-	new = malloc(sizeof(IP));
-	if(new == NULL){
-		fprintf(stderr, "Erreur: insert_ip\n");
-		fprintf(stderr, "malloc failed on new ip_cel\n");
-		return ERROR;
-	}
+    // creation de l'ip_cel
+    new = malloc(sizeof(IP));
+    if(new == NULL){
+        fprintf(stderr, "Erreur: insert_ip\n");
+        fprintf(stderr, "malloc failed on new ip_cel\n");
+        return ERROR;
+    }
 
     strncpy(new->val, ip, strlen(ip));
     if(new->val == NULL){
@@ -327,9 +345,9 @@ int insert_ip(IP * liste, char * ip){
     
     // on attache l'élément new en fin de chaine
     tmp_ip->next = new;
-	
-	// tout s'est bien passé
-	return 0;
+    
+    // tout s'est bien passé
+    return 0;
 }
 
 
@@ -365,12 +383,48 @@ int put_hash(char * hash, char * ip, DHT * table){
 }
 
 
-/*
 
-void hash_want_delete(char * hash, char * ip){
 
+
+void delete_hash(char * hash, DHT * table){
+	
+	DHT * tmp_dht = table, *old;
+	
+	// verif. args.
+	if(hash == NULL){
+		fprintf(stderr, "Erreur: delete_hash\n");
+		fprintf(stderr, "argument hash is NULL\n");
+		return;
+	}
+	if(table == NULL){
+		fprintf(stderr, "Erreur: delete_hash\n");
+		fprintf(stderr, "argument table is NULL\n");
+		return;
+	}
+
+	// on cherche le hash
+	while((strncmp(tmp_dht->val,hash,strlen(hash))!=0)&&(tmp_dht!=NULL)){
+		old = tmp_dht;
+		tmp_dht = tmp_dht->next;
+	}
+	
+	if(tmp_dht == NULL){
+		fprintf(stderr, "Erreur: delete_hash\n");
+		fprintf(stderr, "Hash %s not in table or already deleted\n", hash);
+		return;
+	}
+	
+	// suppression du hash_cel
+	old->next = tmp_dht->next;
+	delete_ip_list(tmp_dht->want);
+	delete_ip_list(tmp_dht->have);
+
+	// suppression finale
+	free(tmp_dht);
 }
 
+
+/*
 void hash_have_delete(char * hash, char * ip){
 
 }
