@@ -15,8 +15,8 @@ int main(int argc, char **argv)
     char buf[MESS_MAX_SIZE];
     socklen_t addrlen;
 	char ip6[INET6_ADDRSTRLEN];
-	char type[1];
-	char length[2];
+	char type[2];
+	char length[3];
 
 	//On regarde si c'est get ou set
 	if(argc<4){
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 		// close the socket
 		close(sockfd);
 	}
-	if(strcmp(argv[3],"set")==0){
+	if(strcmp(argv[3],"put")==0){
 		//check nb args == 6
 		//On envoie un message
 		struct sockaddr_in6 dest;
@@ -144,20 +144,19 @@ int main(int argc, char **argv)
 		// check the number of args on command line
 		if(argc != 6)
 		{
-		    printf("USAGE: %s @dest port_num string ip\n", argv[0]);
+		    printf("USAGE: %s @dest port_num put hash ip\n", argv[0]);
 		    exit(-1);
 		}
 		port_nb=atoi(argv[2]);
-
-		//On defini le type a SET
-		printf("Coucou\n");
 		
 		int type_en=SET;
 		//itoa(type_en,type,2);
 		snprintf(type,2,"%d",type_en);
+		type[1]=('\0');
+		printf("%ld\n",sizeof(type));
 		//strncpy(type,,1);
 		//type=(char)SET;
-		printf("Type: %s\n",type);
+		
 		
 		memset(buf,'\0',MESS_MAX_SIZE);
 
@@ -181,20 +180,22 @@ int main(int argc, char **argv)
 		printf("Longueur ip: %d\n",longueur_message-((longueur_message>>6)<<6));
 		printf("Longueur hash: %d\n",(longueur_message>>6));
 
+		printf("Type: %s\n",type);
 		//snprintf(&length[0],2,"%c",taille_ip);
 		//snprintf(&length[1],2,"%c",taille_hash);
 		length[0]=(char)taille_ip-'0';
 		length[1]=(char)taille_hash-'0';
 		printf("char 1: (%c)\n",length[0]);
 		printf("char 2: (%c)\n",length[1]);
-
+		length[2]='\0';
 		
-				
+		
 		//On ajoute le type a buf
-		strncat(buf,type,1);
-		// On concatene la longuer a buf
+		strncpy(buf,type,strlen(type));
+		// On concatene la longueur a buf
 		strncat(buf,length,strlen(length));
-		buf[4]='\0';
+		printf("length: %s\n",length);
+		//buf[4]='\0';
 		printf("Concat longueur: %s\n",buf);
 		//On concatene l'ip au buffer
 		//il faudrait que l'ip fasse 46 caracteres
