@@ -1,15 +1,18 @@
 CFLAGS=-Wall -Wextra -Werror
-EXEC=server client
+EXEC=server client test_dht
 
 
 # compilation de tous les programmes
 all: $(EXEC)
 
-server: dht.o
-	gcc server.c $< -o $@ $(CFLAGS)
+server: dht.o fctsocket.o
+	gcc server.c $^ -o $@ $(CFLAGS)
 
 client: dht.o client.c fctsocket.o
 	gcc client.c dht.o fctsocket.o -o $@ $(CFLAGS)
+
+test_dht: dht.o
+	gcc test_dht.c dht.o -o $@ $(CFLAGS)
 
 dht.o: dht.c dht.h
 	gcc -c $< $(CFLAGS) 
