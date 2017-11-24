@@ -13,9 +13,9 @@
 #include <string.h>
 
 
-#define ERROR         -1
-#define MESS_MAX_SIZE 1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
-#define PARTITION     26+10 // alphabet + chiffres base 10
+#define ERROR           -1
+#define MESS_MAX_SIZE   1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
+#define PARTITION       26+10 // alphabet + chiffres base 10
 #define TAILLE_MAX_HASH 1000 // taille max d'un hash
 
 /* Définition des types pour les messages */
@@ -39,27 +39,21 @@
  * \brief Liste chainée de IP
  */
 typedef struct ip_cel{
-	char val[INET6_ADDRSTRLEN];
-	struct ip * next;
-}Ip;
+    char val[INET6_ADDRSTRLEN];
+    struct ip_cel * next;
+}IP;
 
 
 /*
  * \struct hash_cel dht.h
- * \brief Liste chainée de hash.
+ * \brief Table de hash.
  */
 typedef struct hash_cel{
-	char val[TAILLE_MAX_HASH];
-	struct hash_cel * next;
-	struct ip_cel * want;
-	struct ip_cel * have;
+    char val[TAILLE_MAX_HASH];
+    struct hash_cel * next;
+    struct ip_cel * want;
+    struct ip_cel * have;
 }DHT;
-
-
-/*
- *
- */
-
 
 
 
@@ -101,6 +95,7 @@ int parse_hostname(char * hostname, char * port, char * ip);
 int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
 
 
+
 /* 
  * \fn int check_hash (char * hash)
  * \brief Verifie qu'un hash est valide
@@ -109,6 +104,51 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
  * \return 0 si le hash est valide, -1 sinon
  */
 int check_hash(char * hash);
+
+
+
+/* TABLE DES HASHS */
+
+
+/*
+ * \fn DHT * init_dht (char * hash)
+ * \brief Initialise une table pour stocker les hash
+ *
+ * \param hash Le premier hash de la table
+ * \return Un pointeur vers la table créée
+ */
+DHT * init_dht(char * hash);
+
+
+
+/*
+ * \fn void supp_dht (DHT * table)
+ * \brief Supprime une table de hash
+ *
+ * \param table Un pointeur vers une table
+ */
+void supp_dht(DHT * table);
+
+
+
+/*
+ * \fn void affiche_dht (DHT * table)
+ * \brief Affiche les éléments d'un table
+ *
+ * \param table Un pointeur vers une table
+ */
+void affiche_dht (DHT * table);
+
+
+
+/*
+ * \fn 
+ * \brief Recupère le hash
+ *
+ * \param 
+ */
+int get_hash(char * cible, char * dst);
+
 
 
 #endif

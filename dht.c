@@ -62,56 +62,134 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
 }
 
 
-int check_hash(char * hash){	
-	int lg=strlen(hash);	
-	if (lg<65){
-		return ERROR;
-	}
-	if(lg>TAILLE_MAX_HASH){
-		return ERROR;
-	}
-	return 0;
+int check_hash(char * hash){    
+    int lg=strlen(hash);    
+    if (lg<65){
+        return ERROR;
+    }
+    if(lg>TAILLE_MAX_HASH){
+        return ERROR;
+    }
+    return 0;
 }
 
 
 /***** TABLE DHT *****/
 
 DHT * init_dht(char * hash){
-	DHT * table = malloc(sizeof(struct hash_cel));
-	// on vérifie que le malloc à bien fonctinner
-	if(table == NULL){
-		fprintf(stderr, "Erreur malloc: allocation echoue\n");
-		exit(EXIT_FAILURE);
-	}
-	// on vérifie que le hash est valide
-	if(check_hash(hash) == ERROR){
-		fprintf(stderr, "Erreur: hash invalide\n");
-		exit(EXIT_FAILURE);
-	}
-	table->val = hash;
-	table->want = NULL;
-	table->have = NULL;
-	return table;
-}
-
-void supp_dht(){
-
-}
-
-void insert_ip_want(){
-
-}
-
-void insert_ip_have(){
-
-}
-
-void insert_hash(){
-
-}
-
-void get_hash(){
-
+    DHT * table = malloc(sizeof(DHT));
+    if(table == NULL){
+        fprintf(stderr, "Erreur: init_dht\n");
+        fprintf(stderr, "malloc: allocation echoué\n");
+        exit(EXIT_FAILURE);
+    }
+    strncpy(table->val, hash, strlen(hash));
+    table->next = NULL;
+    table->want = NULL;
+    table->have = NULL;    
+    return table;
 }
 
 
+
+void supp_dht(DHT * table){
+    DHT *tmp1_dht = table, *tmp2_dht;
+    IP *tmp1_ip, *tmp2_ip;
+    
+    // traitement du dernier hash de la liste
+    while(tmp1_dht->next != NULL){
+    
+        // suppression liste want
+        tmp1_ip = tmp1_dht->want;
+        if(tmp1_ip != NULL){
+            while(tmp1_ip->next != NULL){
+                tmp2_ip = tmp1_ip;
+                tmp1_ip = tmp1_ip->next;
+                free(tmp2_ip);
+            }
+            free(tmp1_ip);
+        }
+
+        // suppression liste have
+        tmp1_ip = tmp1_dht->have;
+        if(tmp1_ip != NULL){
+            while(tmp1_ip->next != NULL){
+                tmp2_ip = tmp1_ip;
+                tmp1_ip = tmp1_ip->next;
+                free(tmp2_ip);
+            }
+            free(tmp1_ip);
+        }
+
+        // suppression hash_cel
+        tmp2_dht = tmp1_dht;
+        tmp1_dht = tmp1_dht->next;
+        free(tmp2_dht);
+    }
+    free(tmp1_dht);
+}
+
+
+void affiche_dht(DHT * table){
+    DHT * tmp_dht = table;
+    IP * tmp_ip;
+    // on visite toutes les hash_cel    
+    while(tmp_dht != NULL){
+        
+        // affichage du hash
+        printf("HASH: %s\n", tmp_dht->val);
+        
+        // affichage have
+        printf("IP possèdant le hash:\n");
+        tmp_ip = tmp_dht->have;
+        while(tmp_ip != NULL){
+            printf("\tIP: %s\n", tmp_ip->val);
+        }
+        
+        // affichage want
+        printf("IP souhaitant le hash:\n");
+        tmp_ip = tmp_dht->want;
+        while(tmp_ip != NULL){
+            printf("\tIP: %s\n", tmp_ip->val);
+        }
+
+        // on passe au hash suivant
+        tmp_dht = tmp_dht->next;
+    }
+}
+
+
+int * get_hash(char * hash){
+	DHT * tmp_dht;
+	// parcours de la liste des hashs
+	
+}
+
+
+
+/*
+
+void put_hash(char * hash, char * ip){
+
+}
+
+
+void hash_want_insert(char * hash, char * ip){
+    
+}
+
+
+void hash_have_insert(char * hash, char * ip){
+
+}
+
+void hash_want_delete(char * hash, char * ip){
+
+}
+
+void hash_have_delete(char * hash, char * ip){
+
+}
+
+
+*/
