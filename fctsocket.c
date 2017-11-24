@@ -89,3 +89,35 @@ void lier_socket6(int sockfd, struct sockaddr_in6 socket){
 	}
 	return;
 }
+
+void creation_chaine(char * type, char * lg,char * ip,char * hash, char * data){
+	//On ajoute le type a data
+	strncpy(data,type,strlen(type));
+	// On concatene la longueur a buf
+	strncat(data,lg,strlen(lg));
+	//On concatene l'ip au buffer
+	//il faudrait que l'ip fasse 46 caracteres
+	//printf("Message: %s\n",ip6);
+	strncat(data,ip,INET6_ADDRSTRLEN);
+	//On concatene le hash au buffer
+	strncat(data,hash,strlen(hash));
+	return;
+}
+
+void remplir_lg(char * ip, char * hash, char * lg){
+	//On recupere la taille des deux chaines
+	int taille_ip=strlen(ip);
+	int taille_hash=strlen(hash);
+	//Stockage de la longueur de l'ip dans le premier octet
+	lg[0]=(char)taille_ip-'0';
+	//Stockage de la longueur du hash dans le deuxieme octet
+	lg[1]=(char)taille_hash-'0';
+	lg[2]='\0';
+	return;
+}
+
+void remplir_type(int val_type, char * type){
+	snprintf(type,2,"%d",val_type);
+	type[1]=('\0');
+	return;
+}

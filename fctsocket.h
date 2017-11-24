@@ -11,4 +11,8 @@ void envoyer_mess6(int sockfd,char * str,struct sockaddr_in6 socket);
 int recevoir_mess6(int sockfd,char * str,int size,struct sockaddr_in6 socket);
 
 void lier_socket6(int sockfd, struct sockaddr_in6 socket);
+
+void creation_chaine(char * type, char * lg,char * ip,char * hash, char * data);
+void remplir_lg(char * ip, char * hash, char * lg);
+void remplir_type(int val_type, char * type);
 #endif
