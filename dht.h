@@ -182,4 +182,16 @@ int put_hash(char * hash, char * ip, DHT * table);
 void delete_hash(char * hash, DHT * table);
 
 
+/*
+ * \fn void delete_ip (char * hash, char * ip, DHT * table, int liste)
+ * \brief Supprime une IP associé à un hash selon 
+ *
+ * \param hash un hash sous forme de string
+ * \param ip une ip sous forme de string
+ * \param table un pointeur vers une table de hash
+ * \param liste la liste dans laquelle se trouve l'IP (WANT ou HAVE)
+ */
+void delete_ip(char * hash, char * ip, DHT * table, int liste);
+
+
 #endif
