@@ -12,7 +12,6 @@
 
 int main(int argc, char **argv)
 {
-	int port_nb;
     int sockfd;
     char buf[MESS_MAX_SIZE];
     socklen_t addrlen;
@@ -38,56 +37,24 @@ int main(int argc, char **argv)
 		    exit(-1);
 		}
 
-		//Conversion en entier du port
-		port_nb=atoi(argv[2]);
-		
-		// socket factory
+		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-
-		// init remote addr structure and other params
-		dest.sin6_family = AF_INET6;
-		dest.sin6_port   = htons(port_nb);
-		addrlen         = sizeof(struct sockaddr_in6);
-
-		printf("%s\n",argv[1]);
-		// get addr from command line and convert it
-		int ret;
-		if((ret=inet_pton(AF_INET6,argv[1],&dest.sin6_addr)) != 1)
-		{
-			if (ret == 0){
-				fprintf(stderr,"adresse invalide\n");
-				exit(EXIT_FAILURE);
-			}
-		    perror("inet_pton\n");
-			close(sockfd);
-			exit(EXIT_FAILURE);
-		}
-		
-		// send string
-		if(sendto(sockfd,argv[4],strlen(argv[4]),0,(struct sockaddr *)&dest,addrlen) == -1)
-		{
-		    perror("sendto\n");
-			close(sockfd);
-			exit(EXIT_FAILURE);
-		}
-
-		// close the socket
-		close(sockfd);
+		// on initialise la structure
+		dest=initv6(atoi(argv[2]));
+		//On initialise addrlen
+		addrlen = sizeof(struct sockaddr_in6);
+		// On initialise l'ip du socket
+		setip6(argv[1],dest,sockfd);
+		// On envoie le message
+		printf("On va envoyer le hash\n");
+		envoyer_mess6(sockfd,argv[4],dest,addrlen);
+		fermer_socket(sockfd);
+		printf("On a envoyé le hash\n");
 		
 		//On attends une reponse
 		struct sockaddr_in6 my_addr;
 		struct sockaddr_in6 client;
-		/*
-		// check the number of args on command line
-		if(argc != 2)
-		{
-		    printf("Usage: %s local_port\n", argv[0]);
-		exit(-1);
-		}
-		
-		port_nb=atoi(argv[1]);
-		*/
-		// socket factory
+
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
 		    perror("socket");
