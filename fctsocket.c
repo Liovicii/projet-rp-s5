@@ -1,6 +1,5 @@
 #include "fctsocket.h"
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -35,20 +34,26 @@ struct sockaddr_in6 initv6(int port){
 
 void setip6(char * ip,struct sockaddr_in6 dest,int sockfd){
 	int ret;
-	if((ret=inet_pton(AF_INET6,ip,&dest.sin6_addr)) != 1)
-	{
-		if (ret == 0){
-			fprintf(stderr,"adresse invalide\n");
+	if(strcmp("in6addr_any",ip)==0){
+		dest.sin6_addr=in6addr_any;
+	}
+	else{
+		if((ret=inet_pton(AF_INET6,ip,&dest.sin6_addr)) != 1)
+		{
+			if (ret == 0){
+				fprintf(stderr,"adresse invalide\n");
+				exit(EXIT_FAILURE);
+			}
+			perror("inet_pton\n");
+			fermer_socket(sockfd);
 			exit(EXIT_FAILURE);
 		}
-	    perror("inet_pton\n");
-		fermer_socket(sockfd);
-		exit(EXIT_FAILURE);
 	}
 	return;
 }
 
-void envoyer_mess6(int sockfd,char * str,struct sockaddr_in6 socket,int addrlen){
+void envoyer_mess6(int sockfd,char * str,struct sockaddr_in6 socket){
+	socklen_t addrlen=sizeof(struct sockaddr_in6);
 	if(sendto(sockfd,str,strlen(str),0,(struct sockaddr *)&socket,addrlen) == -1)
 	{
 		perror("sendto\n");
@@ -56,5 +61,29 @@ void envoyer_mess6(int sockfd,char * str,struct sockaddr_in6 socket,int addrlen)
 		exit(EXIT_FAILURE);
 	}
 
+	return;
+}
+
+int recevoir_mess6(int sockfd,char * str,int size,struct sockaddr_in6 socket){
+	int rec;
+	socklen_t addrlen=sizeof(struct sockaddr_in6);
+	if((rec=recvfrom(sockfd,str,size,0,(struct sockaddr *)&socket,&addrlen)) == -1)
+	{
+	  perror("recvfrom");
+	  fermer_socket(sockfd);
+	  exit(EXIT_FAILURE);
+	}
+
+	return rec;
+}
+
+void lier_socket6(int sockfd, struct sockaddr_in6 socket){
+	socklen_t addrlen=sizeof(struct sockaddr_in6);
+	if(bind(sockfd,(struct sockaddr *)&socket,addrlen) == -1)
+	{
+	  perror("bind");     
+	  fermer_socket(sockfd);
+	  exit(EXIT_FAILURE);
+	}
 	return;
 }
