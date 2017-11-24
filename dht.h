@@ -13,14 +13,16 @@
 #include <string.h>
 
 
-#define ERROR           -1
+#define ERROR           -1    // Retour de fonction pour les erreurs
 #define MESS_MAX_SIZE   1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
-#define PARTITION       26+10 // alphabet + chiffres base 10
-#define TAILLE_MAX_HASH 1000 // taille max d'un hash
+#define TAILLE_MAX_HASH 1000  // taille max d'un hash
+#define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
 
 /* Définition des types pour les messages */
-#define GET 1
-#define SET 2
+#define GET   1
+#define SET   2
+#define WANT  3
+#define HAVE  4
 
 
 /**
@@ -107,7 +109,10 @@ int check_hash(char * hash);
 
 
 
-/* TABLE DES HASHS */
+
+/* * *  TABLE DES HASHS * * */
+
+
 
 
 /*
@@ -142,12 +147,14 @@ void affiche_dht (DHT * table);
 
 
 /*
- * \fn 
- * \brief Recupère le hash
+ * \fn char * get_hash (char * hash, DHT * table)
+ * \brief Recupère les adresses IP qui possède un hash
  *
- * \param 
+ * \param hash Un hash
+ * \param table Un pointeur vers une table
+ * \return Une chaine de caractère contenant la liste des IPs
  */
-int get_hash(char * cible, char * dst);
+char * get_hash(char * hash, DHT * table);
 
 
 

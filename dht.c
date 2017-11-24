@@ -159,19 +159,75 @@ void affiche_dht(DHT * table){
 }
 
 
-int * get_hash(char * hash){
-	DHT * tmp_dht;
-	// parcours de la liste des hashs
-	
-}
+char * get_hash(char * hash, DHT * table){
 
+	DHT * tmp_dht = table;
+	IP * tmp_ip;
+	char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
+
+	// vérification des arguments
+	if(hash == NULL){
+		fprintf(stderr, "Erreur: get_hash\n");
+		fprintf(stderr, "hash value is %s\n", hash);
+		return NULL;
+	}
+	if(table == NULL){
+		fprintf(stderr, "Erreur: get_hash\n");
+		fprintf(stderr, "table is NULL\n");
+		return NULL;
+	}
+	
+	// on cherche le hash
+	while((strncmp(hash,tmp_dht->val,strlen(hash)) != 0)){
+		tmp_dht = tmp_dht->next;
+		// si on sort de la liste, on sort de la fonction
+		if(tmp_dht == NULL){
+			fprintf(stderr, "Erreur: get_hash\n");
+			fprintf(stderr, "hash %s not found\n", hash);
+			return NULL;
+		}
+	}
+	
+	// on crée la chaine qui contiendra la liste des IP qui possède le hash
+	tmp_ip = tmp_dht->have;
+	if(tmp_ip == NULL){
+		fprintf(stderr, "Erreur: get_hash\n");
+		fprintf(stderr, "nobody has hash %s :(\n", hash);
+		return NULL;
+	}
+	while(tmp_ip != NULL){
+		strncat(ips, " ", 1);
+		strncat(ips, tmp_ip->val, strlen(tmp_ip->val));
+		if(ips == NULL){
+			fprintf(stderr, "Erreur: get_hash\n");
+			fprintf(stderr, "strncat: ips has value %s\n", ips);
+		}
+	}
+
+	return ips;
+}
 
 
 /*
+void put_hash(char * hash, char * ip, DHT * table){
+	
+	DHT * tmp_dht = table;
+	IP * tmp_ip;
 
-void put_hash(char * hash, char * ip){
+	// recherche du hash
+	while(strncmp(tmp_dht->val,hash,strlen(hash)) != 0){
+		tmp_dht = tmp_dht->next;
+	}
+	
+	if(tmp_dht == NULL){
+
+	}
+	else{
+
+	}
 
 }
+
 
 
 void hash_want_insert(char * hash, char * ip){
