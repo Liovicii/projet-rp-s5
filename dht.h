@@ -14,6 +14,7 @@
 
 
 #define ERROR           -1    // Retour de fonction pour les erreurs
+#define NTD             2     // Retour de fonction Nothing to do
 #define MESS_MAX_SIZE   1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
 #define TAILLE_MAX_HASH 1000  // taille max d'un hash
 #define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
@@ -157,5 +158,15 @@ void affiche_dht (DHT * table);
 char * get_hash(char * hash, DHT * table);
 
 
+/*
+ * \fn    
+ * \brief 
+ *
+ * \param 
+ * \param 
+ * \param 
+ * \return 
+ */
+int put_hash(char * hash, char * ip, DHT * table);
 
 #endif

@@ -159,85 +159,213 @@ void affiche_dht(DHT * table){
 }
 
 
+
 char * get_hash(char * hash, DHT * table){
 
-	DHT * tmp_dht = table;
-	IP * tmp_ip;
-	char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
+    DHT * tmp_dht = table;
+    IP * tmp_ip;
+    char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
 
-	// vérification des arguments
-	if(hash == NULL){
-		fprintf(stderr, "Erreur: get_hash\n");
-		fprintf(stderr, "hash value is %s\n", hash);
-		return NULL;
-	}
-	if(table == NULL){
-		fprintf(stderr, "Erreur: get_hash\n");
-		fprintf(stderr, "table is NULL\n");
-		return NULL;
-	}
+    // vérification des arguments
+    if(hash == NULL){
+        fprintf(stderr, "Erreur: get_hash\n");
+        fprintf(stderr, "hash value is %s\n", hash);
+        return NULL;
+    }
+    if(table == NULL){
+        fprintf(stderr, "Erreur: get_hash\n");
+        fprintf(stderr, "table is NULL\n");
+        return NULL;
+    }
+    
+    // on cherche le hash
+    while((strncmp(hash,tmp_dht->val,strlen(hash)) != 0)){
+        tmp_dht = tmp_dht->next;
+        // si on sort de la liste, on sort de la fonction
+        if(tmp_dht == NULL){
+            fprintf(stderr, "Erreur: get_hash\n");
+            fprintf(stderr, "hash %s not found\n", hash);
+            return NULL;
+        }
+    }
+    
+    // on crée la chaine qui contiendra la liste des IP qui possède le hash
+    tmp_ip = tmp_dht->have;
+    if(tmp_ip == NULL){
+        fprintf(stderr, "Erreur: get_hash\n");
+        fprintf(stderr, "nobody has hash %s :(\n", hash);
+        return NULL;
+    }
+    while(tmp_ip != NULL){
+        strncat(ips, " ", 1);
+        strncat(ips, tmp_ip->val, strlen(tmp_ip->val));
+        if(ips == NULL){
+            fprintf(stderr, "Erreur: get_hash\n");
+            fprintf(stderr, "strncat: ips has value %s\n", ips);
+        }
+    }
+
+    return ips;
+}
+
+
+
+
+/*
+ * \fn int insert_hash (char * hash, DHT * table)
+ * \brief Insert un hash dans une table de hash
+ *
+ * \param hash un hash au format string
+ * \param table pointeur vers une table
+ * \return 0 si tout se passe bien, -1 si erreur, NTD(2) si rien à faire
+ */
+int insert_hash(char * hash, DHT * table){
+
+    DHT *tmp_dht = table, *new;
+
+    // vérification des arguments
+    if(hash == NULL){
+        fprintf(stderr, "Erreur: insert_hash\n");
+        fprintf(stderr, "hash value is %s\n", hash);
+        return ERROR;
+    }
+    if(table == NULL){
+        fprintf(stderr, "Erreur: insert_hash\n");
+        fprintf(stderr, "table is NULL\n");
+        return ERROR;
+    }
+
+    // parcours de la table
+    while(tmp_dht->next != NULL){
+
+        // on vérifie que le hash n'existe pas déjà
+        if(strncmp(tmp_dht->val, hash, strlen(hash)) == 0){
+            fprintf(stderr, "Erreur: insert_hash\n");
+            fprintf(stderr, "hash %s has already an entry !\n", hash);
+            return NTD;
+        }
+        tmp_dht = tmp_dht->next;
+    }
+    
+    // création du hash_cel
+    new = malloc(sizeof(DHT));
+    if(new == NULL){
+        fprintf(stderr, "Erreur: insert_hash\n");
+        fprintf(stderr, "malloc failed to init hash_cel\n");
+        return ERROR;
+    }
+    
+    strncpy(new->val, hash, strlen(hash));
+    if(new->val == NULL){
+        fprintf(stderr, "Erreur: insert_hash\n");
+        fprintf(stderr, "failed to copy hash into new hash_cel\n");
+        return ERROR;
+    }
+    new->next = NULL;
+    new->want = NULL;
+    new->have = NULL;
+    
+    // on attache l'élément new en fin de chaine
+    tmp_dht->next = new;
+
+    // tout s'est bien passé
+    return 0;
+}
+
+
+
+
+/*
+ * \fn int insert_ip (IP * liste, char * ip)
+ * \brief Insert une ip dans une liste d'IP
+ *
+ * \param liste une liste chaine d'IP
+ * \param ip une adresse IP
+ * \return 0 si tout se passe bien, -1 si erreur, NTD(2) si rien à faire
+ */
+int insert_ip(IP * liste, char * ip){
 	
-	// on cherche le hash
-	while((strncmp(hash,tmp_dht->val,strlen(hash)) != 0)){
-		tmp_dht = tmp_dht->next;
-		// si on sort de la liste, on sort de la fonction
-		if(tmp_dht == NULL){
-			fprintf(stderr, "Erreur: get_hash\n");
-			fprintf(stderr, "hash %s not found\n", hash);
-			return NULL;
-		}
+	IP * tmp_ip = liste, *new;
+
+	// verification des arguments
+	if(liste == NULL){
+		fprintf(stderr, "Erreur: insert_ip\n");
+		fprintf(stderr, "IP liste is NULL\n");
+		return ERROR;
 	}
-	
-	// on crée la chaine qui contiendra la liste des IP qui possède le hash
-	tmp_ip = tmp_dht->have;
-	if(tmp_ip == NULL){
-		fprintf(stderr, "Erreur: get_hash\n");
-		fprintf(stderr, "nobody has hash %s :(\n", hash);
-		return NULL;
-	}
-	while(tmp_ip != NULL){
-		strncat(ips, " ", 1);
-		strncat(ips, tmp_ip->val, strlen(tmp_ip->val));
-		if(ips == NULL){
-			fprintf(stderr, "Erreur: get_hash\n");
-			fprintf(stderr, "strncat: ips has value %s\n", ips);
-		}
+	if(ip == NULL){
+		fprintf(stderr, "Erreur: insert_ip\n");
+		fprintf(stderr, "IP [%s] is NULL\n", ip);
+		return ERROR;
 	}
 
-	return ips;
+	// insertion IP
+	while(tmp_ip->next != NULL){
+		if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
+			fprintf(stderr, "Erreur: insert_ip\n");
+			fprintf(stderr, "IP %s already in list\n", ip);
+			return NTD;
+		}
+		tmp_ip = tmp_ip->next;
+	}
+
+	// creation de l'ip_cel
+	new = malloc(sizeof(IP));
+	if(new == NULL){
+		fprintf(stderr, "Erreur: insert_ip\n");
+		fprintf(stderr, "malloc failed on new ip_cel\n");
+		return ERROR;
+	}
+
+    strncpy(new->val, ip, strlen(ip));
+    if(new->val == NULL){
+        fprintf(stderr, "Erreur: insert_ip\n");
+        fprintf(stderr, "failed to copy ip into new ip_cel\n");
+        return ERROR;
+    }
+    new->next = NULL;
+    
+    // on attache l'élément new en fin de chaine
+    tmp_ip->next = new;
+	
+	// tout s'est bien passé
+	return 0;
+}
+
+
+
+int put_hash(char * hash, char * ip, DHT * table){
+
+    DHT * tmp_dht = table;
+
+    // recherche du hash
+    while((strncmp(tmp_dht->val,hash,strlen(hash)) != 0) && (tmp_dht!=NULL)){
+        tmp_dht = tmp_dht->next;
+    }
+
+    // on regarde ce qu'on doit faire
+    if(tmp_dht == NULL){
+        // on a pas trouve le hash donc on l'insere
+        if(insert_hash(hash, table) == ERROR){
+            fprintf(stderr, "Erreur: put_hash\n");
+            fprintf(stderr, "Insertion hash failed\n");
+            return ERROR;
+        }
+        tmp_dht = tmp_dht->next;
+    }
+    // le hash existe ou a été créé, on insert l'IP
+    if(insert_ip(tmp_dht->have, ip) == ERROR){
+        fprintf(stderr, "Erreur: put_hash\n");
+        fprintf(stderr, "Insertion IP failed\n");
+        return ERROR;
+    }
+
+    // houf, tout s'est bien passé
+    return 0;
 }
 
 
 /*
-void put_hash(char * hash, char * ip, DHT * table){
-	
-	DHT * tmp_dht = table;
-	IP * tmp_ip;
-
-	// recherche du hash
-	while(strncmp(tmp_dht->val,hash,strlen(hash)) != 0){
-		tmp_dht = tmp_dht->next;
-	}
-	
-	if(tmp_dht == NULL){
-
-	}
-	else{
-
-	}
-
-}
-
-
-
-void hash_want_insert(char * hash, char * ip){
-    
-}
-
-
-void hash_have_insert(char * hash, char * ip){
-
-}
 
 void hash_want_delete(char * hash, char * ip){
 
