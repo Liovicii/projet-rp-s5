@@ -26,5 +26,5 @@ test:
 
 # nettoyage
 clean:
-	rm -f *.log
+	rm -f test/*.log
 	rm -f *.o
