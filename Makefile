@@ -8,7 +8,7 @@ all: $(EXEC)
 server: dht.o
 	gcc server.c $< -o $@ $(CFLAGS)
 
-client: client.c dht.o
+client: dht.o client.c
 	gcc client.c $< -o $@ $(CFLAGS)
 
 dht.o: dht.c dht.h
