@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+
 #include "dht.h"
+#include "fctsocket.h"
 
 int main(int argc, char **argv)
 {
@@ -25,11 +27,11 @@ int main(int argc, char **argv)
 	}
 	
 	if(strcmp(argv[3],"get")==0){
-		//check nb args ==5
+		
 		//On envoie juste un message
 		struct sockaddr_in6 dest;
 
-		// check the number of args on command line
+		// On verifie le nombre d'arguments
 		if(argc != 5)
 		{
 		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
@@ -40,16 +42,11 @@ int main(int argc, char **argv)
 		port_nb=atoi(argv[2]);
 		
 		// socket factory
-		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
-		{
-		    perror("socket\n");
-		exit(EXIT_FAILURE);
-		}
+		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 
 		// init remote addr structure and other params
 		dest.sin6_family = AF_INET6;
 		dest.sin6_port   = htons(port_nb);
-		dest.sin6_flowinfo = 0;
 		addrlen         = sizeof(struct sockaddr_in6);
 
 		printf("%s\n",argv[1]);
@@ -77,7 +74,7 @@ int main(int argc, char **argv)
 		// close the socket
 		close(sockfd);
 		
-				//On attends une reponse
+		//On attends une reponse
 		struct sockaddr_in6 my_addr;
 		struct sockaddr_in6 client;
 		/*
@@ -153,19 +150,13 @@ int main(int argc, char **argv)
 		//itoa(type_en,type,2);
 		snprintf(type,2,"%d",type_en);
 		type[1]=('\0');
-		printf("%ld\n",sizeof(type));
-		//strncpy(type,,1);
-		//type=(char)SET;
-		
-		
+	
 		memset(buf,'\0',MESS_MAX_SIZE);
 
 			
 		//Stockage ipv6 dans ip6
 		int taille_ip=strlen(argv[1]);
-		printf("Message: %s\n",argv[1]);
 		strncpy(ip6,argv[1],INET6_ADDRSTRLEN);
-		printf("Message: %s\n",ip6);
 		//On regarde si le hash est valide
 		if(check_hash(argv[4])==-1){
 			fprintf(stderr,"usage: le hash n'est pas assez long\n");
@@ -175,18 +166,10 @@ int main(int argc, char **argv)
 		int taille_hash=strlen(argv[4]);
 		
 		//length=(char)strlen(argv[4]);
-		int longueur_message=(taille_hash<<6)+taille_ip;
-		printf("Longueur du message: %d\n",longueur_message);
-		printf("Longueur ip: %d\n",longueur_message-((longueur_message>>6)<<6));
-		printf("Longueur hash: %d\n",(longueur_message>>6));
-
-		printf("Type: %s\n",type);
 		//snprintf(&length[0],2,"%c",taille_ip);
 		//snprintf(&length[1],2,"%c",taille_hash);
 		length[0]=(char)taille_ip-'0';
 		length[1]=(char)taille_hash-'0';
-		printf("char 1: (%c)\n",length[0]);
-		printf("char 2: (%c)\n",length[1]);
 		length[2]='\0';
 		
 		
@@ -194,26 +177,17 @@ int main(int argc, char **argv)
 		strncpy(buf,type,strlen(type));
 		// On concatene la longueur a buf
 		strncat(buf,length,strlen(length));
-		printf("length: %s\n",length);
-		//buf[4]='\0';
-		printf("Concat longueur: %s\n",buf);
 		//On concatene l'ip au buffer
 		//il faudrait que l'ip fasse 46 caracteres
 		//printf("Message: %s\n",ip6);
 		strncat(buf,ip6,INET6_ADDRSTRLEN);
-		printf("Message: %s\n",buf);
 		//On concatene le hash au buffer
 		strncat(buf,argv[4],strlen(argv[4]));
 		printf("%s\n",buf);
 
-
 		char recup[3];
 		strncpy(recup,buf+1,2);
 		recup[3]='\0';
-		printf("Recup: %s\n",recup);
-		printf("Longueur ip: %d\n",(int)recup[0]+'0');
-		printf("Longueur hash: %d\n",(int)recup[1]+'0');
-		// socket factory
 		if((sockfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP)) == -1)
 		{
 		    perror("socket\n");
