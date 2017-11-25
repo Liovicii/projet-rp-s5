@@ -282,13 +282,15 @@ int insert_hash(char * hash, DHT * table){
         fprintf(stderr, "\tfailed to copy hash into new hash_cel\n");
         return ERROR;
     }
+    
+    new->val[strlen(hash)]='\0';
     new->next = NULL;
     new->want = NULL;
     new->have = NULL;
     
     // on attache l'élément new en fin de chaine
     tmp_dht->next = new;
-
+	printf("Valeure inserée %s\n",tmp_dht->next->val);
     // tout s'est bien passé
     return 0;
 }
@@ -528,10 +530,23 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
         return;
     }
     
+    printf("On recherche l'ip");
     // recherche de l'IP
-    while((tmp_ip!=NULL) && (strncmp(tmp_ip->val,ip,strlen(ip))!=0)){
-        old = tmp_ip;
-        tmp_ip = tmp_ip->next;
+    int chercher=1;
+    while((tmp_ip!=NULL)&& chercher){
+    	if(strlen(tmp_ip->val)==strlen(ip)){
+    		if (strncmp(tmp_ip->val,ip,strlen(ip))!=0){
+				old = tmp_ip;
+        		tmp_ip = tmp_ip->next;    		
+    		}
+    		else{
+    			chercher=0;
+    		}
+    	}
+    	else{
+    		old = tmp_ip;
+        	tmp_ip = tmp_ip->next;
+        } 
     }
 
     // l'ip est introuvable
