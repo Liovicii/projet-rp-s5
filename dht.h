@@ -169,7 +169,7 @@ char * get_hash(char * hash, DHT * table);
  * \return 0 si tu se passe bien, -1 en cas d'erreur, 2 si 
  *  l'adresse IP est déjà présente dans la liste.
  */
-int put_hash(char * hash, char * ip, DHT * table);
+int put_hash(char * hash, char * ip, DHT ** table);
 
 
 

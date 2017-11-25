@@ -369,9 +369,9 @@ int insert_ip(DHT * hash, char * ip, int liste){
 
 
 
-int put_hash(char * hash, char * ip, DHT * table){
+int put_hash(char * hash, char * ip, DHT ** table){
 
-    DHT * tmp_dht = table;
+    DHT * tmp_dht;
 
     // check args.
     if(hash == NULL){
@@ -384,11 +384,13 @@ int put_hash(char * hash, char * ip, DHT * table){
         fprintf(stderr, "\tip argument is NULL\n");
         return ERROR;
     }
-    if(table == NULL){
-        fprintf(stderr, "Erreur: put_hash");
-        fprintf(stderr, "\ttable argument is NULL\n");
-        return ERROR;
-    }
+    if(*table == NULL){
+		// il faut créer la table
+		printf("=> table inexistante. Initialisation.\n");
+		*table = init_dht(hash);
+	}
+
+	tmp_dht = *table;
 
     // recherche du hash
     while((tmp_dht!=NULL) && (strncmp(tmp_dht->val,hash,strlen(hash)) != 0)){
@@ -399,13 +401,13 @@ int put_hash(char * hash, char * ip, DHT * table){
     if(tmp_dht == NULL){
         // on a pas trouve le hash donc on l'insere
         printf("=> hash inexistant: insertion hash...\n");
-        if(insert_hash(hash, table) == ERROR){
+        if(insert_hash(hash, *table) == ERROR){
             fprintf(stderr, "Erreur: put_hash");
             fprintf(stderr, "\tInsertion hash failed\n");
             return ERROR;
         }
          // tmp_dht = à l'adresse du nouveau hash
-        tmp_dht = table;
+        tmp_dht = *table;
         while(tmp_dht->next != NULL) tmp_dht = tmp_dht->next;
     }
 
@@ -469,12 +471,10 @@ void delete_hash(char * hash, DHT ** table){
     if(old == NULL){
         // cas particulier de la suppression du 1er élément
         *table = (*table)->next;
-        printf("TABLE: %s\n", (*table)->val);
     }
     else{
         old->next = tmp_dht->next;
     }
-    printf("TMP: %s\n", tmp_dht->val);
     delete_ip_list(tmp_dht->want);
     delete_ip_list(tmp_dht->have);
     free(tmp_dht);
@@ -530,7 +530,6 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
         return;
     }
     
-    printf("On recherche l'ip");
     // recherche de l'IP
     int chercher=1;
     while((tmp_ip!=NULL)&& chercher){
