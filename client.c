@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 		
 		remplir_lg(argv[5],argv[4],length);
 		
-		creation_chaine(type,length,argv[5],argv[4],buf);
+		creation_chaine(type,length,concatener_ip_hash(argv[5],argv[4]),buf);
 		
 
 		

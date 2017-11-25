@@ -90,17 +90,25 @@ void lier_socket6(int sockfd, struct sockaddr_in6 socket){
 	return;
 }
 
-void creation_chaine(char * type, char * lg,char * ip,char * hash, char * data){
+char * concatener_ip_hash(char *ip,char *hash){
+	char * string=malloc(strlen(ip)+strlen(hash)+1);
+	if (string ==NULL){
+		fprintf(stderr,"Erreur concatener_ip_hash\n");
+		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
+		exit(EXIT_FAILURE);
+	}
+	strncpy(string,ip,strlen(ip)+1);
+	strncat(string,hash,strlen(hash)+1);
+	return string;
+}
+
+void creation_chaine(char * type, char * lg,char * str, char * data){
 	//On ajoute le type a data
 	strncpy(data,type,strlen(type));
 	// On concatene la longueur a buf
 	strncat(data,lg,strlen(lg));
 	//On concatene l'ip au buffer
-	//il faudrait que l'ip fasse 46 caracteres
-	//printf("Message: %s\n",ip6);
-	strncat(data,ip,INET6_ADDRSTRLEN);
-	//On concatene le hash au buffer
-	strncat(data,hash,strlen(hash));
+	strncat(data,str,strlen(str));
 	return;
 }
 
