@@ -1,8 +1,7 @@
 #include "dht.h"
 #include "fctsocket.h"
 
-#define LENGTH_TYPE 1
-#define LENGTH_LG 2
+
 
 int main(int argc, char **argv)
 {

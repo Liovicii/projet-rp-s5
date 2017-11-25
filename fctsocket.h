@@ -1,6 +1,9 @@
 #ifndef _FCTSOCKET_H_
 #define _FCTSOCKET_H_
 #include <sys/socket.h>
+#define LENGTH_TYPE 1
+#define LENGTH_LG 2
+#define TAILLE_MAX_HASH 1000
 
 int creer_socket(int domaine, int type, int protocole);
 void fermer_socket(int sockfd);
@@ -18,6 +21,9 @@ void remplir_type(int val_type, char * type);
 void extract_string(char * entree, char * sortie, int indice, int t_a_extr);
 int get_length_ip(char * lg);
 int get_length_hash(char * lg);
-
+int get_type_from_mess(char * mes);
+void extraire_taille_mess(char * lg_m,char *mes);
+char * extraire_ip_mess(char * mes);
+char * extraire_hash_mess(char * mes);
 
 #endif

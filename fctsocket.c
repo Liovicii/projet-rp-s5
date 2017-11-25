@@ -136,4 +136,41 @@ int get_length_hash(char * lg){
 	return ((int)lg[1]+'0');
 }
 
+int get_type_from_mess(char * mes){
+	char type_m[LENGTH_TYPE+1];
+	extract_string(mes,type_m,0,LENGTH_TYPE);
+	printf("Type en string: %s\n",type_m);
+	return atoi(type_m);
+}
 
+void extraire_taille_mess(char * lg_m,char *mes){
+	extract_string(mes,lg_m,1,LENGTH_LG);
+	return;
+}
+char * extraire_ip_mess(char * mes){
+	char lg_m[LENGTH_LG+1];
+	extraire_taille_mess(lg_m,mes);
+	printf("extraire_ip: Taille ip= %d\n",get_length_ip(lg_m));
+	char * ip=malloc(get_length_ip(lg_m));
+	if (ip ==NULL){
+		fprintf(stderr,"Erreur extraire_ip_mess\n");
+		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
+		exit(EXIT_FAILURE);
+	}
+	extract_string(mes,ip,3,get_length_ip(lg_m));
+	return ip;
+}
+
+char * extraire_hash_mess(char * mes){
+	char lg_m[LENGTH_LG+1];
+	extraire_taille_mess(lg_m,mes);
+	printf("extraire_ip: Taille hash= %d\n",get_length_hash(lg_m));
+	char * hash=malloc(TAILLE_MAX_HASH+1);
+	if (hash ==NULL){
+		fprintf(stderr,"Erreur extraire_hash_mess\n");
+		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
+		exit(EXIT_FAILURE);
+	}
+	extract_string(mes,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
+	return hash;
+}

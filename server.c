@@ -105,6 +105,17 @@ int main(int argc, char * argv[]){
     // affichage du message recu
     printf("Message recu:\n%s\n", buf);
 
+	int type_mess=get_type_from_mess(buf);
+	char * hash=extraire_hash_mess(buf);
+	char * ip_m=extraire_ip_mess(buf);
+	
+	
+	
+
+	
+	printf("Val type: %d\n",type_mess);
+	printf("Val ip mes: %s\n",ip_m);		
+	printf("Val h mes: %s\n",hash);	
     // fermeture du socket
     fermer_socket(sock);
 
