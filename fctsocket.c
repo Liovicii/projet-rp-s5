@@ -97,7 +97,7 @@ char * concatener_ip_hash(char *ip,char *hash){
 		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
 		exit(EXIT_FAILURE);
 	}
-	strncpy(string,ip,strlen(ip)+1);
+	strncpy(string,ip,strlen(ip));
 	strncat(string,hash,strlen(hash)+1);
 	return string;
 }
@@ -116,10 +116,19 @@ void remplir_lg(char * ip, char * hash, char * lg){
 	//On recupere la taille des deux chaines
 	int taille_ip=strlen(ip);
 	int taille_hash=strlen(hash);
+	int lgt=taille_ip+(taille_hash<<6);
+	printf("taille ip: %d\n", taille_ip);
+	printf("taille hash: %d\n",taille_hash);
+	printf("taille hash decale: %d\n",taille_hash<<6);
+	printf("taille taille: %d\n",lgt);
 	//Stockage de la longueur de l'ip dans le premier octet
-	lg[0]=(char)taille_ip-'0';
+	lg[0]=((char)(lgt-((lgt>>6)<<6)))-'0';
+	printf("conversion taille: %c\n",lg[0]);
+	printf("conversion taille: %d\n",(int)lg[0]+'0');
 	//Stockage de la longueur du hash dans le deuxieme octet
-	lg[1]=(char)taille_hash-'0';
+	lg[1]=((char)(lgt>>6))-'0';
+	printf("conversion taille: %c\n",lg[1]);
+	printf("conversion taille: %d\n",(int)lg[1]+'0');
 	lg[2]='\0';
 	return;
 }
@@ -137,11 +146,17 @@ void extract_string(char * entree,char * sortie, int indice, int t_a_extr){
 }
 
 int get_length_ip(char * lg){
-	return ((int)lg[0]+'0');
+	int t_ip=(int)lg[0]+'0';
+	int t_hash=(int)lg[1]+'0';
+	int lgt=t_ip+(t_hash<<6);
+	return (lgt-((lgt>>6)<<6));
 }
 
 int get_length_hash(char * lg){
-	return ((int)lg[1]+'0');
+	int t_ip=(int)lg[0]+'0';
+	int t_hash=(int)lg[1]+'0';
+	int lgt=t_ip+(t_hash<<6);
+	return ((lgt>>6));
 }
 
 int get_type_from_mess(char * mes){
