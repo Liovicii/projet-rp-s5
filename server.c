@@ -2,6 +2,7 @@
 #include "fctsocket.h"
 
 
+
 /**
  * \fn void usage (char * arg)
  * \brief Affiche l'usage de la fonction sur la sortie d'erreur
@@ -66,9 +67,10 @@ int main(int argc, char * argv[]){
 
     // initialisations des variables
     int port, sock, type_mess;
-    struct sockaddr_in6 addr_server;
+    struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE];
-	char *hash, *ip_m;
+    char *hash, *ip_m, *get;
+    DHT * t = NULL;     // table des hashs
 
     // vérification des arguments
     if(argc != 3){
@@ -98,25 +100,49 @@ int main(int argc, char * argv[]){
     addr_server.sin6_port = htons(port);
 
     // on attache l'adresse IP du serveur au socket
-	lier_socket6(sock, addr_server);
+    lier_socket6(sock, addr_server);
 
     // communications du serveur 
-	recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
-	 
+    recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
+     
     // affichage du message recu
     printf("Message recu:\n%s\n", buf);
 
-	type_mess = get_type_from_mess(buf);
-	hash = extraire_hash_mess(buf);
-	ip_m = extraire_ip_mess(buf);
-	
-	
-	
+    type_mess = get_type_from_mess(buf);
+    hash = extraire_hash_mess(buf);
+    ip_m = extraire_ip_mess(buf);
 
-	
-	printf("Val type: %d\n",type_mess);
-	printf("Val ip mes: %s\n",ip_m);		
-	printf("Val h mes: %s\n",hash);	
+    // on détermine ce qu'on doit faire
+    switch(type_mess){
+
+        case SET:
+
+            // message de type PUT
+            if(put_hash(hash, ip_m, &t) == ERROR){
+                fprintf(stderr, "put_hash failed\n");
+            }
+            printf("IP %s added to hash %s\n", ip_m, hash);
+            break;
+
+        case GET:
+            // message de type GET
+            get = get_hash(hash, t);
+            printf("GET: %s\n", get);
+            
+            // on doit envoyer un message au client
+            addr_dest.sin6_family = AF_INET6;
+            addr_dest.sin6_port = htons(port);
+            setip6(ip_m, &addr_dest, sock);
+            envoyer_mess6(sock, get, addr_dest);
+            break;
+
+        default:
+            // type de message inconnu
+            fprintf(stderr, "Erreur: message de type %d inconnu\n", type_mess);
+            break;
+    }
+
+
     // fermeture du socket
     fermer_socket(sock);
 
