@@ -1,12 +1,3 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-
 #include "dht.h"
 #include "fctsocket.h"
 
@@ -19,13 +10,24 @@ int main(int argc, char **argv)
     char buf[MESS_MAX_SIZE];
 	char type[2];
 	char length[3];
-
-	//On regarde si c'est get ou set
-	if(argc<4){
+	
+	if(argc<=4){
+		switch(argc){
+			case 1:
+				fprintf(stderr,"Il n'y a pas d'arguments\n");
+				break;
+			case 2:
+				fprintf(stderr,"Il doit un port, une commande, un hash\n");
+				break;
+			case 3:
+				fprintf(stderr,"Il doit manquer une commande et un hash\n");
+				break;
+			case 4:
+				fprintf(stderr,"Veuillez entrer une commande (get/set)\n");
+		}
 		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	
 	if(strcmp(argv[3],"get")==0){
 		
 		//On envoie juste un message
@@ -34,6 +36,9 @@ int main(int argc, char **argv)
 		// On verifie le nombre d'arguments
 		if(argc != 5)
 		{
+			if(argc == 4){
+					fprintf(stderr,"Il doit manquer le hash\n");		
+			}
 		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		    exit(-1);
 		}
@@ -105,6 +110,14 @@ int main(int argc, char **argv)
 		// check the number of args on command line
 		if(argc != 6)
 		{
+			switch(argc){
+				case 4:
+					fprintf(stderr,"Il doit manquer le hash et l'ip\n");
+					break;
+				case 5:
+					fprintf(stderr,
+					"Il doit manquer l'ip qu'on va associer au hash\n");		
+			}
 		    printf("USAGE: %s @dest port_num put hash ip\n", argv[0]);
 		    exit(-1);
 		}
@@ -154,6 +167,7 @@ int main(int argc, char **argv)
 		fermer_socket(sockfd);
 	}
 	else{
+		fprintf(stderr,"Commande inconnue\n");
 		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		exit(EXIT_FAILURE);
 	}
