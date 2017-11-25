@@ -66,7 +66,7 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, type_mess;
+    int port, sock, type_mess, exit = 1;
     struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE];
     char *hash, *ip_m, *get;
@@ -102,47 +102,62 @@ int main(int argc, char * argv[]){
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock, addr_server);
 
-    // communications du serveur 
-    recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
+
+    // communications du serveur
+    while(exit != 1){
+        
+        recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
      
-    // affichage du message recu
-    printf("Message recu:\n%s\n", buf);
+        // affichage du message recu
+        printf("Message recu:\n%s\n", buf);
+       
+        // analyse du message
+        type_mess = get_type_from_mess(buf);
+        hash = extraire_hash_mess(buf);
+        ip_m = extraire_ip_mess(buf);
 
-    type_mess = get_type_from_mess(buf);
-    hash = extraire_hash_mess(buf);
-    ip_m = extraire_ip_mess(buf);
+        // on détermine ce qu'on doit faire
+        switch(type_mess){
+    
+            case PUT:
+                // message de type PUT
+                if(put_hash(hash, ip_m, &t) == ERROR){
+                    fprintf(stderr, "put_hash failed\n");
+                }
+                printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+                break;
 
-    // on détermine ce qu'on doit faire
-    switch(type_mess){
-
-        case PUT:
-            // message de type PUT
-            if(put_hash(hash, ip_m, &t) == ERROR){
-                fprintf(stderr, "put_hash failed\n");
-            }
-            printf("IP %s added to hash %s\n", ip_m, hash);
-            break;
-
-        case GET:
-            // message de type GET
-            get = get_hash(hash, t);
-            printf("GET: %s\n", get);
+            case GET:
+                // message de type GET
+                get = get_hash(hash, t);
+                printf("GET: %s\n", get);
+               // creation_chaine()
+                
+                // on doit envoyer un message au client
+                addr_dest.sin6_family = AF_INET6;
+                addr_dest.sin6_port = htons(port);
+                setip6(ip_m, &addr_dest, sock);
             
-            // on doit envoyer un message au client
-            addr_dest.sin6_family = AF_INET6;
-            addr_dest.sin6_port = htons(port);
-            setip6(ip_m, &addr_dest, sock);
-            
-            envoyer_mess6(sock, get, addr_dest);
-            break;
+                envoyer_mess6(sock, get, addr_dest);
+                break;
+           
+            case EXIT:
+                // on demande au serveur de s'arreter
+                // on vérifie le code d'acces
+                if(check_access_code(hash) == 0) exit = 1;
+                else exit = 0;
+                break;
 
-        default:
-            // type de message inconnu
-            fprintf(stderr, "Erreur: message de type %d inconnu\n", type_mess);
-            break;
-    }
+            default:
+                // type de message inconnu
+                fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
+                break;
+        }
+    
+    } // fin boucle 
 
-
+    printf("Arret du serveur %s\n", argv[1]);
+    
     // fermeture du socket
     fermer_socket(sock);
 

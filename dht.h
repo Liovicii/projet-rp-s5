@@ -19,11 +19,15 @@
 #define TAILLE_MAX_HASH 1000  // taille max d'un hash
 #define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
 
+#define PASS            "password123" // mot de passe serveur 
+
 /* Définition des types pour les messages */
-#define GET   1
-#define SET   2
-#define WANT  3
-#define HAVE  4
+#define GET     1
+#define SET     2 // à supprimer après modif
+#define PUT     2
+#define WANT    3
+#define HAVE    4
+#define EXIT    5
 
 
 /**
@@ -109,6 +113,16 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
 int check_hash(char * hash);
 
 
+/*
+ * \fn int check_access_code
+ * \brief Vérifie si le code entré est valide
+ *  permet d'acceder au serveur pour des manipulation critique
+ *  (terminer le serveur par exemple)
+ *
+ * \param code Le mot de passe qu'on veut tester
+ * \return 0 si le code est juste, -1 sinon
+ */
+int check_access_code(char * code);
 
 
 /* * *  TABLE DES HASHS * * */

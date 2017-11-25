@@ -75,6 +75,16 @@ int check_hash(char * hash){
 }
 
 
+int check_access_code(char * code){
+    int len_arg = strlen(code);
+    int len_pass = strlen(PASS);
+    if((strncmp(code, PASS, len_pass) == 0) && (len_arg == len_pass)){
+        return 0;
+    }
+    return -1;
+}
+
+
 /***** TABLE DHT *****/
 
 
@@ -290,7 +300,7 @@ int insert_hash(char * hash, DHT * table){
     
     // on attache l'élément new en fin de chaine
     tmp_dht->next = new;
-	printf("Valeure inserée %s\n",tmp_dht->next->val);
+    printf("Valeure inserée %s\n",tmp_dht->next->val);
     // tout s'est bien passé
     return 0;
 }
@@ -385,12 +395,12 @@ int put_hash(char * hash, char * ip, DHT ** table){
         return ERROR;
     }
     if(*table == NULL){
-		// il faut créer la table
-		printf("=> table inexistante. Initialisation.\n");
-		*table = init_dht(hash);
-	}
+        // il faut créer la table
+        printf("=> table inexistante. Initialisation.\n");
+        *table = init_dht(hash);
+    }
 
-	tmp_dht = *table;
+    tmp_dht = *table;
 
     // recherche du hash
     while((tmp_dht!=NULL) && (strncmp(tmp_dht->val,hash,strlen(hash)) != 0)){
@@ -533,18 +543,18 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
     // recherche de l'IP
     int chercher=1;
     while((tmp_ip!=NULL)&& chercher){
-    	if(strlen(tmp_ip->val)==strlen(ip)){
-    		if (strncmp(tmp_ip->val,ip,strlen(ip))!=0){
-				old = tmp_ip;
-        		tmp_ip = tmp_ip->next;    		
-    		}
-    		else{
-    			chercher=0;
-    		}
-    	}
-    	else{
-    		old = tmp_ip;
-        	tmp_ip = tmp_ip->next;
+        if(strlen(tmp_ip->val)==strlen(ip)){
+            if (strncmp(tmp_ip->val,ip,strlen(ip))!=0){
+                old = tmp_ip;
+                tmp_ip = tmp_ip->next;            
+            }
+            else{
+                chercher=0;
+            }
+        }
+        else{
+            old = tmp_ip;
+            tmp_ip = tmp_ip->next;
         } 
     }
 
