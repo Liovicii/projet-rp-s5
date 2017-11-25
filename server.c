@@ -65,9 +65,10 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock;
+    int port, sock, type_mess;
     struct sockaddr_in6 addr_server;
     char buf[MESS_MAX_SIZE];
+	char *hash, *ip_m;
 
     // vérification des arguments
     if(argc != 3){
@@ -105,9 +106,9 @@ int main(int argc, char * argv[]){
     // affichage du message recu
     printf("Message recu:\n%s\n", buf);
 
-	int type_mess=get_type_from_mess(buf);
-	char * hash=extraire_hash_mess(buf);
-	char * ip_m=extraire_ip_mess(buf);
+	type_mess = get_type_from_mess(buf);
+	hash = extraire_hash_mess(buf);
+	ip_m = extraire_ip_mess(buf);
 	
 	
 	
