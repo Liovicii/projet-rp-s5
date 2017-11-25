@@ -115,8 +115,7 @@ int main(int argc, char * argv[]){
     // on détermine ce qu'on doit faire
     switch(type_mess){
 
-        case SET:
-
+        case PUT:
             // message de type PUT
             if(put_hash(hash, ip_m, &t) == ERROR){
                 fprintf(stderr, "put_hash failed\n");
@@ -133,6 +132,7 @@ int main(int argc, char * argv[]){
             addr_dest.sin6_family = AF_INET6;
             addr_dest.sin6_port = htons(port);
             setip6(ip_m, &addr_dest, sock);
+            
             envoyer_mess6(sock, get, addr_dest);
             break;
 
