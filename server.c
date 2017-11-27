@@ -158,12 +158,12 @@ int main(int argc, char * argv[]){
                 // message de type GET
                 get = get_hash(hash, t);
                 printf("GET: %s\n", get);
-                //creation_chaine( , , get, mess);
-        
+                if(get == NULL) break;
+
                 // on doit envoyer un message au client
                 // creation du message
                 remplir_lg(ip_m, get, lg);
-                remplir_type(GET, type);
+                remplir_type(HAVE, type);
                 creation_chaine(type, lg, mess, get);
 
                 envoyer_mess6(sock, mess, addr_dest);
@@ -172,6 +172,11 @@ int main(int argc, char * argv[]){
             case NEW:
                 // un nouveau serveur nous notifie
                 break;
+
+			case DECO:
+				// un serveur se déconnecte
+				
+				break;
 
             case HAVE:
                 // un serveur nous informe de ses modification
