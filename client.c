@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 		my_addr.sin6_port = htons(7000);
 		my_addr.sin6_family = AF_INET6;
 		int ret;
-		if((ret=inet_pton(AF_INET6,"2001:660:4701:6001:5580:7c97:2e4b:553d",&my_addr.sin6_addr)) != 1)
+		if((ret=inet_pton(AF_INET6,"::1",&my_addr.sin6_addr)) != 1)
 		{
 			if (ret == 0){
 				fprintf(stderr,"adresse invalide\n");
