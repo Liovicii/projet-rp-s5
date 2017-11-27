@@ -118,7 +118,7 @@ int main(int argc, char * argv[]){
     // communications du serveur
     while(end != 1){
         
-        recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
+        recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_dest);
      
         // affichage du message recu
         printf("Message recu:\n%s\n", buf);
@@ -161,10 +161,6 @@ int main(int argc, char * argv[]){
                 //creation_chaine( , , get, mess);
         
                 // on doit envoyer un message au client
-                addr_dest.sin6_family = AF_INET6;
-                addr_dest.sin6_port = htons(port);
-                setip6(ip_m, &addr_dest, sock);
-                
                 // creation du message
                 remplir_lg(ip_m, get, lg);
                 remplir_type(GET, type);
