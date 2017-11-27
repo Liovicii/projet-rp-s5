@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		struct sockaddr_in6 client;
 		// On initilise le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-		my_addr=initv6(atoi(argv[2]));
+		my_addr=initv6(7000);
 		setip6("in6addr_any",&my_addr,sockfd);
 		
 		memset(buf,'\0',MESS_MAX_SIZE);
