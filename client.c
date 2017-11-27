@@ -41,9 +41,17 @@ int main(int argc, char **argv)
 		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		    exit(-1);
 		}
-
+		struct sockaddr_in6 my_addr;
 		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
+		
+		my_addr=initv6(7000);
+		setip6("in6addr_any",&my_addr,sockfd);
+		
+		memset(buf,'\0',MESS_MAX_SIZE);
+		//On lie la structure au socket
+		lier_socket6(sockfd, my_addr);
+
 		// on initialise la structure
 		dest=initv6(atoi(argv[2]));
 		
@@ -61,20 +69,15 @@ int main(int argc, char **argv)
 		printf("hash= %s\n",buf+4);
 		printf("On va envoyer le hash\n");
 		envoyer_mess6(sockfd,buf,dest);
-		fermer_socket(sockfd);
+		//fermer_socket(sockfd);
 		printf("On a envoyé le hash\n");
 		
 		//On attends une reponse
-		struct sockaddr_in6 my_addr;
+		
 		struct sockaddr_in6 client;
 		// On initilise le socket
-		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-		my_addr=initv6(7000);
-		setip6("in6addr_any",&my_addr,sockfd);
-		
-		memset(buf,'\0',MESS_MAX_SIZE);
-		//On lie la structure au socket
-		lier_socket6(sockfd, my_addr);
+//		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
+
 		
 		// reception de la chaine de caracteres
 		printf("On attends de recvoir un message\n");
