@@ -23,7 +23,6 @@
 
 /* Définition des types pour les messages */
 #define GET     1
-#define SET     2 // à supprimer après modif
 #define PUT     2
 #define WANT    3
 #define HAVE    4
