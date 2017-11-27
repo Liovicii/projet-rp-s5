@@ -1,4 +1,5 @@
 #include "dht.h"
+#include "fctsocket.h"
 
 
 int port_valide(char * port){
@@ -86,6 +87,27 @@ int check_access_code(char * code){
 
 
 /***** LISTE DES SERVER *****/
+
+
+void add_server(char ** liste, char * ip, int * nb){
+	// si on a une liste remplie
+	if(*nb == MAX_SERVER - 1){	
+		fprintf(stderr, "La liste des serveurs est remplie\n");
+		fprintf(stderr, "server %s pas ajoute\n", ip);
+		return;
+	}
+	liste[*nb] = ip;
+	*nb = *nb+1;
+}
+
+
+void supp_server(char ** liste, int i, int * nb){
+	int j;
+	nb--;
+	for(j = i; j < *nb; j++){
+		liste[j] = liste[j+1];
+	}
+}
 
 
 /***** TABLE DHT *****/

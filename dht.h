@@ -29,6 +29,7 @@
 #define HAVE    4
 #define EXIT    5
 #define NEW     6
+#define DECO    7
 
 
 /**
@@ -124,6 +125,18 @@ int check_hash(char * hash);
  * \return 0 si le code est juste, -1 sinon
  */
 int check_access_code(char * code);
+
+
+/*
+ * \fn void supp_server (char ** liste, int i, int *nb)
+ * \brief Supprimer le ieme élement de la liste "liste"
+ *
+ * \param liste Une liste d'adresse IP de serveur
+ * \param i L'élément de la liste à supprimer
+ * \param nb Le nombre d'éléments de la liste
+ */
+void supp_server(char ** liste, int i, int *nb);
+
 
 
 /* * *  TABLE DES HASHS * * */
