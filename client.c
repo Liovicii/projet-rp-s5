@@ -45,12 +45,45 @@ int main(int argc, char **argv)
 		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 		
-		my_addr=initv6(7000);
-		setip6("in6addr_any",&my_addr,sockfd);
+		//my_addr=initv6(7000);
+		my_addr.sin6_port = htons(7000);
+		my_addr.sin6_family = AF_INET6;
+		int ret;
+		if((ret=inet_pton(AF_INET6,"2001:660:4701:6001:5580:7c97:2e4b:553d",&my_addr.sin6_addr)) != 1)
+		{
+			if (ret == 0){
+				fprintf(stderr,"adresse invalide\n");
+				exit(EXIT_FAILURE);
+			}
+			perror("inet_pton\n");
+			fermer_socket(sockfd);
+			exit(EXIT_FAILURE);
+		}
 		
+		if(bind(sockfd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr_in6)) == -1)
+		{
+		  perror("bind");     
+		  fermer_socket(sockfd);
+		  exit(EXIT_FAILURE);
+		}
+		
+		char adr_ip2[INET6_ADDRSTRLEN];
+		if(inet_ntop(AF_INET6,&my_addr.sin6_addr,adr_ip2,INET6_ADDRSTRLEN)==NULL){
+			perror("inet_ntop\n");
+			exit(EXIT_FAILURE);		
+		}
+		fprintf(stderr,"Ip source: %s\n",adr_ip2);
+		//my_addr.sin6_addr = ret;
+		//setip6("2001:660:4701:6001:5580:7c97:2e4b:553d",&my_addr,sockfd);
+	/*
+		if(convert_ipv6("::1", "7800", &my_addr) == ERROR){
+			fprintf(stderr, "Erreur: convert_ipv6 failed\n");
+			exit(EXIT_FAILURE);
+		}
+	*/	
 		memset(buf,'\0',MESS_MAX_SIZE);
 		//On lie la structure au socket
-		lier_socket6(sockfd, my_addr);
+		//lier_socket6(sockfd, my_addr);
 
 		// on initialise la structure
 		dest=initv6(atoi(argv[2]));
@@ -167,7 +200,8 @@ int main(int argc, char **argv)
 		printf("Message complet: %s\n",buf);
 
 		// On creer le socket
-		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);	
+		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
+	
 		// On initialise la structure 
 		dest=initv6(atoi(argv[2]));
 		// On initialise l'ip de la structure
