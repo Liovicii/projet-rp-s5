@@ -114,10 +114,12 @@ int main(int argc, char **argv)
 		
 		// reception de la chaine de caracteres
 		printf("On attends de recvoir un message\n");
-		int rec=recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
+		char reponse[MESS_MAX_SIZE];
+		memset(reponse,'\0',MESS_MAX_SIZE);
+		int rec=recevoir_mess6(sockfd,reponse,MESS_MAX_SIZE,client);
 		printf("On a recu la reponse\n");
 		// print the received char
-		printf("Message recu: %s\n",buf);
+		printf("Message recu: %s\n",reponse);
 		printf("Longueur du message: %d\n",rec);
 	
 		char adr_ip[INET6_ADDRSTRLEN];
@@ -136,8 +138,8 @@ int main(int argc, char **argv)
 
 		char hash[TAILLE_MAX_HASH];
 		char recup[get_length_ip(length)+1];
-		extract_string(buf,recup,3,get_length_ip(lg_m));
-		extract_string(buf,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
+		extract_string(reponse,recup,3,get_length_ip(lg_m));
+		extract_string(reponse,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
 
 		printf("Val type: %s\n",type_m);
 		printf("Val lg: %s\n",lg_m);
