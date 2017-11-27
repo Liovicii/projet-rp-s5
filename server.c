@@ -67,12 +67,14 @@ int main(int argc, char * argv[]){
 
     // initialisations des variables
     int i, port, sock, type_mess, end = 0, test, nb_server = 0;
-	int liste_server[MAX_SERVER];
+	socklen_t addrlen = sizeof(struct sockaddr_in6);
+    int liste_server[MAX_SERVER];
     struct sockaddr_in6 addr_server, addr_dest;
-    char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[2], type[1];
+    char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
     char *hash, *ip_m, *get;
     DHT * t = NULL;     // table des hashs
-
+	memset(mess, '\0', MESS_MAX_SIZE);
+	memset(buf, '\0', MESS_MAX_SIZE);
 
     // vérification des arguments
     if(argc != 3){
@@ -123,17 +125,17 @@ int main(int argc, char * argv[]){
     // communications du serveur
     while(end != 1){
         
-        recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_dest);
-        printf("port reponse: %d\n", addr_dest.sin6_port);
+        if(recvfrom(sock, buf, MESS_MAX_SIZE, 0,
+			(struct sockaddr *)&addr_dest, &addrlen) == ERROR){
+			perror("recvfrom");
+			close(sock);
+			exit(EXIT_FAILURE);
+		}
 
-        // affichage du message recu
-        printf("Message recu:\n%s\n", buf);
-       
         // analyse du message
         type_mess = get_type_from_mess(buf);
         hash = extraire_hash_mess(buf);
         ip_m = extraire_ip_mess(buf);
-		printf("Machine qui m'a contacte: %s\n", ip_m);
 
         // on détermine ce qu'on doit faire
         switch(type_mess){
@@ -142,11 +144,11 @@ int main(int argc, char * argv[]){
                 // message de type PUT
                 if((test = put_hash(hash, ip_m, &t)) == ERROR){
                     fprintf(stderr, "put_hash failed\n");
-                }
-                printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+				}
+
                 // on doit envoyer le hash aux autres serveurs !
                 if(test != NTD){
-                    
+                    printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
                     // envoyer le hash aux serveurs voisins
                     addr_dest.sin6_family = AF_INET6;
                     addr_dest.sin6_port = htons(port);
@@ -163,17 +165,23 @@ int main(int argc, char * argv[]){
             case GET:
                 // message de type GET
                 get = get_hash(hash, t);
+                if(get == NULL){
+					get = malloc(24);
+                    strncpy(get, "no IP match with request", 24);
+                }
                 printf("GET: %s\n", get);
-                if(get == NULL) break;
-
+                printf("PORT: %d\n", addr_dest.sin6_port);
+                inet_ntop(AF_INET6,&addr_dest.sin6_addr,ip_m,INET6_ADDRSTRLEN);
+                printf("IP: %s\n",ip_m); 
+           
                 // on doit envoyer un message au client
                 // creation du message
-				addr_dest.sin6_port = 7000;
-                remplir_lg(ip_m, get, lg);
+                remplir_lg("", get, lg);
                 remplir_type(HAVE, type);
-                creation_chaine(type, lg, mess, get);
+                creation_chaine(type, lg, get, mess);
 
                 envoyer_mess6(sock, mess, addr_dest);
+                free(get);
                 break;
           
             case NEW:
@@ -205,14 +213,14 @@ int main(int argc, char * argv[]){
                 // type de message inconnu
                 fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
                 break;
-        }
+        } // fin switch
    
         // remise à zéro
         type_mess = 0;
         hash = NULL;
         ip_m = NULL;
-        strncpy(buf, "", 0);
-        strncpy(mess, "", 0);
+		memset(mess, '\0', MESS_MAX_SIZE);
+		memset(buf, '\0', MESS_MAX_SIZE);
 
     } // fin boucle 
 
