@@ -90,23 +90,23 @@ int check_access_code(char * code){
 
 
 void add_server(char ** liste, char * ip, int * nb){
-	// si on a une liste remplie
-	if(*nb == MAX_SERVER - 1){	
-		fprintf(stderr, "La liste des serveurs est remplie\n");
-		fprintf(stderr, "server %s pas ajoute\n", ip);
-		return;
-	}
-	liste[*nb] = ip;
-	*nb = *nb+1;
+    // si on a une liste remplie
+    if(*nb == MAX_SERVER - 1){    
+        fprintf(stderr, "La liste des serveurs est remplie\n");
+        fprintf(stderr, "server %s pas ajoute\n", ip);
+        return;
+    }
+    liste[*nb] = ip;
+    *nb = *nb+1;
 }
 
 
 void supp_server(char ** liste, int i, int * nb){
-	int j;
-	nb--;
-	for(j = i; j < *nb; j++){
-		liste[j] = liste[j+1];
-	}
+    int j;
+    nb--;
+    for(j = i; j < *nb; j++){
+        liste[j] = liste[j+1];
+    }
 }
 
 
@@ -261,6 +261,7 @@ char * get_hash(char * hash, DHT * table){
         tmp_ip = tmp_ip->next;
         c++;
     }
+    strncat(ips, "\0", 1);
 
     return ips;
 }
