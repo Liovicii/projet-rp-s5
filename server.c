@@ -66,11 +66,12 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, type_mess, exit = 1;
+    int i, port, sock, type_mess, end = 0, test, nb_server = 0;
     struct sockaddr_in6 addr_server, addr_dest;
-    char buf[MESS_MAX_SIZE];
-    char *hash, *ip_m, *get;
+    char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[2], type[1];
+    char *hash, *ip_m, *get, *liste_server[MAX_SERVER];
     DHT * t = NULL;     // table des hashs
+
 
     // vérification des arguments
     if(argc != 3){
@@ -81,30 +82,41 @@ int main(int argc, char * argv[]){
         usage(argv[0]);
     }
 
+
     // vérification du port
     if((port = port_valide(argv[2])) == ERROR){
         fprintf(stderr, "Erreur: numero de port invalide\n");
         usage(argv[0]);
     }
 
+
     // convertir l'argument en adresse IPv6
     if(convert_ipv6(argv[1], argv[2], &addr_server) == ERROR){
         usage(argv[0]);
     } 
 
+
     // initialisation socket
     sock = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
 
     // initialisation adresse IP du serveur
     addr_server.sin6_family = AF_INET6;
     addr_server.sin6_port = htons(port);
 
+
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock, addr_server);
 
 
+    // on dit aux autres serveurs qu'on est là
+    printf("Voulez-vous vous connecter à un autre serveur: [IP]\n");
+    scanf("%s", liste_server[nb_server]);
+    nb_server++;
+
+
     // communications du serveur
-    while(exit != 1){
+    while(end != 1){
         
         recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_server);
      
@@ -121,31 +133,59 @@ int main(int argc, char * argv[]){
     
             case PUT:
                 // message de type PUT
-                if(put_hash(hash, ip_m, &t) == ERROR){
+                if((test = put_hash(hash, ip_m, &t)) == ERROR){
                     fprintf(stderr, "put_hash failed\n");
                 }
                 printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+                // on doit envoyer le hash aux autres serveurs !
+                if(test != NTD){
+                    
+                    // envoyer le hash aux serveurs voisins
+                    addr_dest.sin6_family = AF_INET6;
+                    addr_dest.sin6_port = htons(port);
+                    remplir_type(HAVE, type);
+
+                    for(i = 1; i < nb_server; i++){
+                        setip6(liste_server[i], &addr_dest, sock);
+                        remplir_lg(liste_server[i], hash, lg);
+                        creation_chaine(type, lg, mess, hash);
+                        envoyer_mess6(sock, mess, addr_dest); 
+                    }
+                }
                 break;
 
             case GET:
                 // message de type GET
                 get = get_hash(hash, t);
                 printf("GET: %s\n", get);
-               // creation_chaine()
-                
+                //creation_chaine( , , get, mess);
+        
                 // on doit envoyer un message au client
                 addr_dest.sin6_family = AF_INET6;
                 addr_dest.sin6_port = htons(port);
                 setip6(ip_m, &addr_dest, sock);
-            
-                envoyer_mess6(sock, get, addr_dest);
+                
+                // creation du message
+                remplir_lg(ip_m, get, lg);
+                remplir_type(GET, type);
+                creation_chaine(type, lg, mess, get);
+
+                envoyer_mess6(sock, mess, addr_dest);
                 break;
-           
+          
+            case NEW:
+                // un nouveau serveur nous notifie
+                break;
+
+            case HAVE:
+                // un serveur nous informe de ses modification
+                break;
+
             case EXIT:
                 // on demande au serveur de s'arreter
                 // on vérifie le code d'acces
-                if(check_access_code(hash) == 0) exit = 1;
-                else exit = 0;
+                if(check_access_code(hash) == 0) end = 1;
+                else end = 0;
                 break;
 
             default:
@@ -157,11 +197,16 @@ int main(int argc, char * argv[]){
     } // fin boucle 
 
     printf("Arret du serveur %s\n", argv[1]);
-    
+   
+    // il faut notifier les autres serveurs qu'on s'arrete
+
     // fermeture du socket
     fermer_socket(sock);
 
+    // suppression de la table
+    supp_dht(t);
+
     // le programme s'est bien déroulé 
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 
 }

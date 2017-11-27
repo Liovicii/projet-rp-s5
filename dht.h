@@ -18,6 +18,7 @@
 #define MESS_MAX_SIZE   1049  // TYPE(1)+LENGTH(2)+IP(46)+DATA(1000)
 #define TAILLE_MAX_HASH 1000  // taille max d'un hash
 #define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
+#define MAX_SERVER      10    // nombre max de serveur qu'on peut connaitre
 
 #define PASS            "password123" // mot de passe serveur 
 
@@ -27,6 +28,7 @@
 #define WANT    3
 #define HAVE    4
 #define EXIT    5
+#define NEW     6
 
 
 /**
