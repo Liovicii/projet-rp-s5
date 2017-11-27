@@ -119,7 +119,8 @@ int main(int argc, char * argv[]){
     while(end != 1){
         
         recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_dest);
-     
+		printf("port reponse: %d\n", addr_dest.sin6_port);
+
         // affichage du message recu
         printf("Message recu:\n%s\n", buf);
        
@@ -194,7 +195,14 @@ int main(int argc, char * argv[]){
                 fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
                 break;
         }
-    
+   
+		// remise à zéro
+		type_mess = 0;
+        hash = NULL;
+        ip_m = NULL;
+		strncpy(buf, "", 0);
+		strncpy(mess, "", 0);
+
     } // fin boucle 
 
     printf("Arret du serveur %s\n", argv[1]);
