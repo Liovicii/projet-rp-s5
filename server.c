@@ -108,12 +108,12 @@ int main(int argc, char * argv[]){
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock, addr_server);
 
-
+/*
     // on dit aux autres serveurs qu'on est là
     printf("Voulez-vous vous connecter à un autre serveur: [IP]\n");
     scanf("%s", liste_server[nb_server]);
     nb_server++;
-
+*/
 
     // communications du serveur
     while(end != 1){
