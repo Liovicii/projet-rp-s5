@@ -67,9 +67,10 @@ int main(int argc, char * argv[]){
 
     // initialisations des variables
     int i, port, sock, type_mess, end = 0, test, nb_server = 0;
+	int liste_server[MAX_SERVER];
     struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[2], type[1];
-    char *hash, *ip_m, *get, *liste_server[MAX_SERVER];
+    char *hash, *ip_m, *get;
     DHT * t = NULL;     // table des hashs
 
 
@@ -115,11 +116,15 @@ int main(int argc, char * argv[]){
     nb_server++;
 */
 
+    // lancement d'un ps fils qui s'occupe du keep alive
+
+    // lancement d'un ps fils qui s'occupe de l'obsolescence des données
+
     // communications du serveur
     while(end != 1){
         
         recevoir_mess6(sock, buf, MESS_MAX_SIZE, addr_dest);
-		printf("port reponse: %d\n", addr_dest.sin6_port);
+        printf("port reponse: %d\n", addr_dest.sin6_port);
 
         // affichage du message recu
         printf("Message recu:\n%s\n", buf);
@@ -128,6 +133,7 @@ int main(int argc, char * argv[]){
         type_mess = get_type_from_mess(buf);
         hash = extraire_hash_mess(buf);
         ip_m = extraire_ip_mess(buf);
+		printf("Machine qui m'a contacte: %s\n", ip_m);
 
         // on détermine ce qu'on doit faire
         switch(type_mess){
@@ -147,10 +153,9 @@ int main(int argc, char * argv[]){
                     remplir_type(HAVE, type);
 
                     for(i = 1; i < nb_server; i++){
-                        setip6(liste_server[i], &addr_dest, sock);
-                        remplir_lg(liste_server[i], hash, lg);
+                        //remplir_lg( ??? , hash, lg);
                         creation_chaine(type, lg, mess, hash);
-                        envoyer_mess6(sock, mess, addr_dest); 
+                        envoyer_mess6(liste_server[i], mess, addr_dest); 
                     }
                 }
                 break;
@@ -174,13 +179,18 @@ int main(int argc, char * argv[]){
                 // un nouveau serveur nous notifie
                 break;
 
-			case DECO:
-				// un serveur se déconnecte
-				
-				break;
+            case DECO:
+                // un serveur se déconnecte
+                
+                break;
 
             case HAVE:
                 // un serveur nous informe de ses modification
+                printf("Reception d'une nouvelle entree\n");
+                if((test = put_hash(hash, ip_m, &t)) == ERROR){
+                    fprintf(stderr, "put_hash failed\n");
+                }
+                printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
                 break;
 
             case EXIT:
@@ -196,12 +206,12 @@ int main(int argc, char * argv[]){
                 break;
         }
    
-		// remise à zéro
-		type_mess = 0;
+        // remise à zéro
+        type_mess = 0;
         hash = NULL;
         ip_m = NULL;
-		strncpy(buf, "", 0);
-		strncpy(mess, "", 0);
+        strncpy(buf, "", 0);
+        strncpy(mess, "", 0);
 
     } // fin boucle 
 
