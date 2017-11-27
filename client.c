@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 		    exit(-1);
 		}
 				
-		remplir_type(SET,type);
+		remplir_type(PUT,type);
 		memset(buf,'\0',MESS_MAX_SIZE);
 
 			
