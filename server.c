@@ -168,6 +168,7 @@ int main(int argc, char * argv[]){
 
                 // on doit envoyer un message au client
                 // creation du message
+				addr_dest.sin6_port = 7000;
                 remplir_lg(ip_m, get, lg);
                 remplir_type(HAVE, type);
                 creation_chaine(type, lg, mess, get);
