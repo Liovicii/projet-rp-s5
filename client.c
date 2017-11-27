@@ -50,8 +50,17 @@ int main(int argc, char **argv)
 		// On initialise l'ip du socket
 		setip6(argv[1],&dest,sockfd);
 		// On envoie le message
+		remplir_type(GET,type);
+		remplir_lg("",argv[4],length);
+		creation_chaine(type,length,concatener_ip_hash("",argv[4]),buf);
+		printf("message que l'on va envoyer: %s\n",buf);
+		
+		char * hashe;
+		hashe = extraire_hash_mess(buf);
+		printf("hash= %s\n",hashe);
+		printf("hash= %s\n",buf+4);
 		printf("On va envoyer le hash\n");
-		envoyer_mess6(sockfd,argv[4],dest);
+		envoyer_mess6(sockfd,buf,dest);
 		fermer_socket(sockfd);
 		printf("On a envoyé le hash\n");
 		
