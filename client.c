@@ -11,7 +11,8 @@ int main(int argc, char **argv)
 	char length[3];
 	char hash[TAILLE_MAX_HASH];
 	char ip_hash[TAILLE_MAX_HASH+INET6_ADDRSTRLEN];
-	char ip[get_length_ip(length)+1];
+	char ip[INET6_ADDRSTRLEN];
+	//char * port;
 	struct sockaddr_in6 dest;
 	struct sockaddr_in6 client;
 	struct sockaddr_in6 my_addr;
@@ -77,10 +78,15 @@ int main(int argc, char **argv)
 		
 
 		// on le port de la destination
-		initv6(atoi(argv[2]),&dest);
-		
+		//initv6(atoi(argv[2]),&dest);
+		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+			fprintf(stderr,"je t'aime pas nah\n");
+			exit(EXIT_FAILURE);
+		}
+		dest.sin6_family=AF_INET6;
+		dest.sin6_port=htons(atoi(argv[2]));
 		// On initialise l'ip de la destinations
-		setip6(argv[1],&dest,sockfd);
+		//setip6(argv[1],&dest,sockfd);
 
 		//On met le buffer a 0 avant d'envoyer le message
 		memset(buf,'\0',MESS_MAX_SIZE);
@@ -148,6 +154,12 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 		
+		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+			fprintf(stderr,"je t'aime pas nah\n");
+			exit(EXIT_FAILURE);
+		}
+		dest.sin6_family=AF_INET6;
+		dest.sin6_port=htons(atoi(argv[2]));
 		remplir_lg(argv[5],argv[4],length);
 		
 		concatener_ip_hash(argv[5],argv[4],ip_hash);
@@ -169,10 +181,11 @@ int main(int argc, char **argv)
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 	
 		// On initialise la structure 
-		initv6(atoi(argv[2]),&dest);
+		//initv6(atoi(argv[2]),&dest);
 		// On initialise l'ip de la structure
-		setip6(argv[1],&dest,sockfd);
+		//setip6(argv[1],&dest,sockfd);
 		// On envoie le message
+
 		envoyer_mess6(sockfd,buf,dest);
 		// On ferme le socket
 		fermer_socket(sockfd);

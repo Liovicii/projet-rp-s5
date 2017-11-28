@@ -36,7 +36,6 @@ void initv6(int port, struct sockaddr_in6* dest){
 
 void setip6(char * ip,struct sockaddr_in6 * dest,int sockfd){
 	int ret;
-	printf("adresse ip= %s\n",ip);
 	if(strcmp("in6addr_any",ip)==0){
 		dest->sin6_addr=in6addr_any;
 	}
@@ -113,18 +112,14 @@ void remplir_lg(char * ip, char * hash, char * lg){
 	int taille_ip=strlen(ip);
 	int taille_hash=strlen(hash);
 	int lgt=taille_ip+(taille_hash<<6);
-	printf("taille ip: %d\n", taille_ip);
-	printf("taille hash: %d\n",taille_hash);
 	//printf("taille hash decale: %d\n",taille_hash<<6);
 	//printf("taille taille: %d\n",lgt);
 	//Stockage de la longueur de l'ip dans le premier octet
 	lg[0]=((char)(lgt-((lgt>>6)<<6)))-'0';
 	//printf("conversion taille: %c\n",lg[0]);
-	printf("taille ip: %d\n",(int)lg[0]+'0');
 	//Stockage de la longueur du hash dans le deuxieme octet
 	lg[1]=((char)(lgt>>6))-'0';
 	//printf("conversion taille: %c\n",lg[1]);
-	printf("conversion taille: %d\n",(int)lg[1]+'0');
 	lg[2]='\0';
 	return;
 }
@@ -158,7 +153,6 @@ int get_length_hash(char * lg){
 int get_type_from_mess(char * mes){
 	char type_m[LENGTH_TYPE+1];
 	extract_string(mes,type_m,0,LENGTH_TYPE);
-	printf("Type en string: %s\n",type_m);
 	return atoi(type_m);
 }
 
@@ -169,7 +163,6 @@ void extraire_taille_mess(char * lg_m,char *mes){
 char * extraire_ip_mess(char * mes){
 	char lg_m[LENGTH_LG+1];
 	extraire_taille_mess(lg_m,mes);
-	printf("extraire_ip: Taille ip= %d\n",get_length_ip(lg_m));
 	char * ip=malloc(get_length_ip(lg_m));
 	if (ip ==NULL){
 		fprintf(stderr,"Erreur extraire_ip_mess\n");
@@ -183,8 +176,6 @@ char * extraire_ip_mess(char * mes){
 char * extraire_hash_mess(char * mes){
 	char lg_m[LENGTH_LG+1];
 	extraire_taille_mess(lg_m,mes);
-	printf("extraire_ip: Taille hash= %d\n",get_length_hash(lg_m));
-	printf("indice= %d\n",3+get_length_ip(lg_m));
 	char * hash=malloc(TAILLE_MAX_HASH+1);
 	if (hash ==NULL){
 		fprintf(stderr,"Erreur extraire_hash_mess\n");
