@@ -3,9 +3,12 @@
  *\author David.Lardenois Lionel.Jung
  */
 
+
 #ifndef _FCTSOCKET_H_
 #define _FCTSOCKET_H_
+
 #include <sys/socket.h>
+#include <netinet/in.h>
 #define LENGTH_TYPE 1
 #define LENGTH_LG 2
 #define TAILLE_MAX_HASH 1000
