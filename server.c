@@ -220,6 +220,7 @@ int main(int argc, char * argv[]){
         type_mess = 0;
         free(hash);
         free(ip_m);
+		free(get);
 		memset(mess, '\0', MESS_MAX_SIZE);
 		memset(buf, '\0', MESS_MAX_SIZE);
 

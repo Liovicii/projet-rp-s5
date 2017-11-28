@@ -214,9 +214,9 @@ void affiche_dht(DHT * table){
 
 char * get_hash(char * hash, DHT * table){
 
-    DHT * tmp_dht = table;
+    DHT * tmp_dht;
     IP * tmp_ip;
-    char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS+1);
+    char * ips;  
     int c=0;
 
     // vérification des arguments
@@ -231,6 +231,9 @@ char * get_hash(char * hash, DHT * table){
         return NULL;
     }
     
+    tmp_dht = table;
+    ips = malloc(INET6_ADDRSTRLEN*MAX_IPS+1);
+	
     // on cherche le hash
     while(strcmp(hash,tmp_dht->val) != 0){
         tmp_dht = tmp_dht->next;
