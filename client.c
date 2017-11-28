@@ -72,12 +72,12 @@ int main(int argc, char **argv)
 		my_addr.sin6_scope_id = 0;		
 		my_addr.sin6_port = htons(7000);	
 
-		lier_socket6(sockfd,(struct sockaddr_in6 *)&my_addr);
+		lier_socket6(sockfd,&my_addr);
 
 		
 
 		// on le port de la destination
-		initv6(atoi(argv[2]),(struct sockaddr_in6 *)&dest);
+		initv6(atoi(argv[2]),&dest);
 		
 		// On initialise l'ip de la destinations
 		setip6(argv[1],&dest,sockfd);
@@ -103,12 +103,11 @@ int main(int argc, char **argv)
 		printf("On attends de recevoir un message\n");
 		// On met le buffer a 0 avant de recevoir le message
 		memset(buf,'\0',MESS_MAX_SIZE);
-		initv6(sockfd,(struct sockaddr_in6 *)&client);
-		int rec=recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
-		printf("On a recu la reponse\n");
-		printf("Message recu: %s\n",buf);
-		printf("Longueur du message: %d\n",rec);
-	
+		initv6(sockfd,&client);
+		recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
+		//printf("On a recu la reponse\n");
+		//printf("Message recu: %s\n",buf);
+		//printf("Longueur du message: %d\n",rec);
 
 		extract_string(buf,type,0,LENGTH_TYPE);
 		extract_string(buf,length,1,LENGTH_LG);
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
 		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
 		// hash va contenir les ip qui sont associes au hash sur le serveur
-		printf("Val h mes: %s\n",hash);	
+		printf("Ip liées au hash demandé: %s\n",hash);	
 		// close the socket
 		close(sockfd);
 		break;
@@ -159,18 +158,18 @@ int main(int argc, char **argv)
 		extract_string(buf,ip,3,get_length_ip(length));
 		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
-		printf("Val type: %s\n",type);
-		printf("Val lg: %s\n",length);
-		printf("Val ip mes: %s\n",ip);		
-		printf("Val h mes: %s\n",hash);
+		//printf("Val type: %s\n",type);
+		//printf("Val lg: %s\n",length);
+		//printf("Val ip mes: %s\n",ip);		
+		//printf("Val h mes: %s\n",hash);
 		
-		printf("Message complet: %s\n",buf);
+		//printf("Message complet: %s\n",buf);
 
 		// On creer le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 	
 		// On initialise la structure 
-		initv6(atoi(argv[2]),(struct sockaddr_in6 *)&dest);
+		initv6(atoi(argv[2]),&dest);
 		// On initialise l'ip de la structure
 		setip6(argv[1],&dest,sockfd);
 		// On envoie le message
