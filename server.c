@@ -29,7 +29,7 @@ void usage(char * arg){
  */
 void parse_option(char * arg[]){
     
-    if((strncmp("--help", arg[1], 6) == 0) && (strlen(arg[1]) == 6)){
+    if(strcmp("--help", arg[1]) == 0){
         // option --help
         printf("Utilisation : %s IPv6 PORT\n", arg[0]);
         printf("         ou : %s --help | --version\n", arg[0]);
@@ -39,7 +39,7 @@ void parse_option(char * arg[]){
         exit(EXIT_SUCCESS);
     }
 
-    if((strncmp("--version", arg[1], 9) == 0) && (strlen(arg[1]) == 9)){
+    if(strcmp("--version", arg[1]) == 0){
         // option --version
         printf("server 1.0\n");
         printf("Copyright 2017 Lionel Jung & David Lardenois\n");
@@ -66,15 +66,17 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int i, port, sock, type_mess, end = 0, test, nb_server = 0;
+    int port, sock, type_mess, end = 0, test; //nb_server = 0, i;
 	socklen_t addrlen = sizeof(struct sockaddr_in6);
-    int liste_server[MAX_SERVER];
+    //int liste_server[MAX_SERVER];
     struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
-    char *hash, *ip_m, *get;
+    char *hash = NULL, *ip_m = NULL, *get = NULL;
     DHT * t = NULL;     // table des hashs
 	memset(mess, '\0', MESS_MAX_SIZE);
 	memset(buf, '\0', MESS_MAX_SIZE);
+	memset(lg, '\0', 3);
+	memset(type, '\0', 2);
 
     // vérification des arguments
     if(argc != 3){
@@ -111,16 +113,15 @@ int main(int argc, char * argv[]){
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock, addr_server);
 
-/*
+
     // on dit aux autres serveurs qu'on est là
-    printf("Voulez-vous vous connecter à un autre serveur: [IP]\n");
-    scanf("%s", liste_server[nb_server]);
-    nb_server++;
-*/
+
 
     // lancement d'un ps fils qui s'occupe du keep alive
 
+
     // lancement d'un ps fils qui s'occupe de l'obsolescence des données
+
 
     // communications du serveur
     while(end != 1){
@@ -145,12 +146,12 @@ int main(int argc, char * argv[]){
                 if((test = put_hash(hash, ip_m, &t)) == ERROR){
                     fprintf(stderr, "put_hash failed\n");
 				}
-
+				printf("TEST= %d\n", test);
                 // on doit envoyer le hash aux autres serveurs !
                 if(test != NTD){
                     printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
                     // envoyer le hash aux serveurs voisins
-                    addr_dest.sin6_family = AF_INET6;
+                    /*addr_dest.sin6_family = AF_INET6;
                     addr_dest.sin6_port = htons(port);
                     remplir_type(HAVE, type);
 
@@ -158,7 +159,7 @@ int main(int argc, char * argv[]){
                         //remplir_lg( ??? , hash, lg);
                         creation_chaine(type, lg, mess, hash);
                         envoyer_mess6(liste_server[i], mess, addr_dest); 
-                    }
+                    }*/
                 }
                 break;
 
@@ -217,8 +218,8 @@ int main(int argc, char * argv[]){
    
         // remise à zéro
         type_mess = 0;
-        hash = NULL;
-        ip_m = NULL;
+        free(hash);
+        free(ip_m);
 		memset(mess, '\0', MESS_MAX_SIZE);
 		memset(buf, '\0', MESS_MAX_SIZE);
 

@@ -40,6 +40,7 @@ int parse_hostname(char * hostname, char * port, char * ip){
 int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
     int convert;
     char ip[INET6_ADDRSTRLEN];
+	memset(ip, '\0', INET6_ADDRSTRLEN);
     convert = inet_pton(AF_INET6, ip, (void*)addr->sin6_addr.s6_addr);
     if(convert <= 0){
         if(convert == 0){
@@ -57,7 +58,7 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
         }
         else{
             perror("inet_pton");
-              return ERROR;     
+            return ERROR;     
         }
     }
     return 0;
@@ -77,9 +78,7 @@ int check_hash(char * hash){
 
 
 int check_access_code(char * code){
-    int len_arg = strlen(code);
-    int len_pass = strlen(PASS);
-    if((strncmp(code, PASS, len_pass) == 0) && (len_arg == len_pass)){
+    if(strcmp(code, PASS) == 0){
         return 0;
     }
     return -1;
@@ -115,7 +114,7 @@ void supp_server(char ** liste, int i, int * nb){
 
 
 DHT * init_dht(char * hash){
-    DHT * table = malloc(sizeof(DHT));
+    DHT * table = malloc(sizeof(struct hash_cel));
     if(table == NULL){
         fprintf(stderr, "Erreur: init_dht");
         fprintf(stderr, "\tmalloc: allocation echoué\n");
@@ -217,7 +216,7 @@ char * get_hash(char * hash, DHT * table){
 
     DHT * tmp_dht = table;
     IP * tmp_ip;
-    char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
+    char * ips = malloc(INET6_ADDRSTRLEN*MAX_IPS+1);
     int c=0;
 
     // vérification des arguments
@@ -233,7 +232,7 @@ char * get_hash(char * hash, DHT * table){
     }
     
     // on cherche le hash
-    while((strncmp(hash,tmp_dht->val,strlen(hash)) != 0)){
+    while(strcmp(hash,tmp_dht->val) != 0){
         tmp_dht = tmp_dht->next;
         // si on sort de la liste, on sort de la fonction
         if(tmp_dht == NULL){
@@ -251,7 +250,7 @@ char * get_hash(char * hash, DHT * table){
         return NULL;
     }
     // on inserera au maximum 10 adresses IP
-    while((tmp_ip != NULL) && (c != 10)){
+    while((tmp_ip != NULL) && (c < 10)){
         strncat(ips, " ", 1);
         strncat(ips, tmp_ip->val, strlen(tmp_ip->val));
         if(ips == NULL){
@@ -262,6 +261,8 @@ char * get_hash(char * hash, DHT * table){
         c++;
     }
     strncat(ips, "\0", 1);
+
+    printf("IPS: %s %ld\n", ips, strlen(ips));
 
     return ips;
 }
@@ -297,7 +298,7 @@ int insert_hash(char * hash, DHT * table){
     while(tmp_dht->next != NULL){
 
         // on vérifie que le hash n'existe pas déjà
-        if(strncmp(tmp_dht->val, hash, strlen(hash)) == 0){
+        if(strcmp(tmp_dht->val, hash) == 0){
             printf("hash %s has already an entry !\n", hash);
             return NTD;
         }
@@ -305,7 +306,7 @@ int insert_hash(char * hash, DHT * table){
     }
    
     // création du hash_cel
-    new = malloc(sizeof(DHT));
+    new = malloc(sizeof(struct hash_cel));
     if(new == NULL){
         fprintf(stderr, "Erreur: insert_hash");
         fprintf(stderr, "\tmalloc failed to init hash_cel\n");
@@ -365,28 +366,33 @@ int insert_ip(DHT * hash, char * ip, int liste){
         return ERROR;
     }
 
-    // on regarde si la liste existe déjà
+    // on regarde si l'ip est déjà dans la liste
     if(tmp_ip != NULL){
-        // on va au bout de la liste
-        while(tmp_ip->next != NULL){
-            if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
+        if(strcmp(tmp_ip->val, ip) == 0){
+            printf("\tIP %s already in list\n", ip);
+            return NTD;
+        }
+        // on parcours la liste
+        while((tmp_ip->next != NULL)){
+            if(strcmp(tmp_ip->val, ip) == 0){
                 printf("\tIP %s already in list\n", ip);
                 return NTD;
             }
             tmp_ip = tmp_ip->next;
-           }
+        }
     }
 
     // creation de l'ip_cel
-       new = malloc(sizeof(IP));
-       if(new == NULL){
-           fprintf(stderr, "Erreur: insert_ip");
+    new = malloc(sizeof(struct ip_cel));
+    if(new == NULL){
+        fprintf(stderr, "Erreur: insert_ip");
         fprintf(stderr, "\tmalloc failed on new ip_cel\n");
         return ERROR;
     }
 
     // remplissage de l'ip_cel
     strncpy(new->val, ip, strlen(ip));
+    //strncpy(new->val, "\0", 1);
     if(new->val == NULL){
         fprintf(stderr, "Erreur: insert_ip");
         fprintf(stderr, "\tfailed to copy ip into new ip_cel\n");
@@ -429,7 +435,7 @@ int put_hash(char * hash, char * ip, DHT ** table){
     tmp_dht = *table;
 
     // recherche du hash
-    while((tmp_dht!=NULL) && (strncmp(tmp_dht->val,hash,strlen(hash)) != 0)){
+    while((tmp_dht!=NULL) && (strcmp(tmp_dht->val,hash) != 0)){
         tmp_dht = tmp_dht->next;
     }
 
@@ -457,7 +463,7 @@ int put_hash(char * hash, char * ip, DHT ** table){
     }
     else{
         // creation manuelle car la liste n'existe pas encore
-        tmp_dht->have = malloc(sizeof(IP));
+        tmp_dht->have = malloc(sizeof(struct ip_cel));
         if(tmp_dht->have == NULL){
             fprintf(stderr, "Erreur: put_hash");
             fprintf(stderr, "\tmalloc: creation of have list failed\n");
@@ -492,7 +498,7 @@ void delete_hash(char * hash, DHT ** table){
     }
 
     // on cherche le hash
-    while((tmp_dht!=NULL)&&(strncmp(tmp_dht->val,hash,strlen(hash))!=0)){
+    while((tmp_dht!=NULL)&&(strcmp(tmp_dht->val,hash)!=0)){
         old = tmp_dht;
         tmp_dht = tmp_dht->next;
     }
@@ -523,6 +529,7 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
     
     DHT * tmp_dht = table;
     IP *tmp_ip, *old = NULL;
+    int chercher;
 
     // verif. args.
     if(hash == NULL){
@@ -567,7 +574,7 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
     }
     
     // recherche de l'IP
-    int chercher=1;
+    chercher=1;
     while((tmp_ip!=NULL)&& chercher){
         if(strlen(tmp_ip->val)==strlen(ip)){
             if (strncmp(tmp_ip->val,ip,strlen(ip))!=0){
