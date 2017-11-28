@@ -111,7 +111,7 @@ int main(int argc, char * argv[]){
 
 
     // on attache l'adresse IP du serveur au socket
-    lier_socket6(sock, addr_server);
+    lier_socket6(sock, &addr_server);
 
 
     // on dit aux autres serveurs qu'on est là
@@ -220,6 +220,7 @@ int main(int argc, char * argv[]){
         type_mess = 0;
         free(hash);
         free(ip_m);
+		free(get);
 		memset(mess, '\0', MESS_MAX_SIZE);
 		memset(buf, '\0', MESS_MAX_SIZE);
 
