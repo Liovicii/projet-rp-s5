@@ -1,4 +1,3 @@
-#include "fctsocket.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -6,6 +5,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+
+#include "fctsocket.h"
 
 int creer_socket(int domaine, int type, int protocole){
 	int sockfd;
@@ -25,11 +26,12 @@ void fermer_socket(int sockfd){
 	return;
 }
 
-struct sockaddr_in6 initv6(int port){
-	struct sockaddr_in6 dest;
-	dest.sin6_family = AF_INET6;
-	dest.sin6_port   = htons(port);
-	return dest;
+void initv6(int port, struct sockaddr_in6* dest){
+	dest->sin6_family = AF_INET6;
+	dest->sin6_port   = htons(port);
+	dest->sin6_flowinfo=1;
+	dest->sin6_scope_id = 0;
+	return ;
 }
 
 void setip6(char * ip,struct sockaddr_in6 * dest,int sockfd){
@@ -79,9 +81,9 @@ int recevoir_mess6(int sockfd,char * str,int size,struct sockaddr_in6 socket){
 	return rec;
 }
 
-void lier_socket6(int sockfd, struct sockaddr_in6 socket){
+void lier_socket6(int sockfd, struct sockaddr_in6 * socket){
 	socklen_t addrlen=sizeof(struct sockaddr_in6);
-	if(bind(sockfd,(struct sockaddr *)&socket,addrlen) == -1)
+	if(bind(sockfd,(struct sockaddr *)socket,addrlen) == -1)
 	{
 	  perror("bind");     
 	  fermer_socket(sockfd);
@@ -90,16 +92,10 @@ void lier_socket6(int sockfd, struct sockaddr_in6 socket){
 	return;
 }
 
-char * concatener_ip_hash(char *ip,char *hash){
-	char * string=malloc(strlen(ip)+strlen(hash)+1);
-	if (string ==NULL){
-		fprintf(stderr,"Erreur concatener_ip_hash\n");
-		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
-		exit(EXIT_FAILURE);
-	}
-	strncpy(string,ip,strlen(ip));
-	strncat(string,hash,strlen(hash)+1);
-	return string;
+void concatener_ip_hash(char *ip,char *hash, char * str){
+	strncpy(str,ip,strlen(ip)+1);
+	strncat(str,hash,strlen(hash)+1);
+	return ;
 }
 
 void creation_chaine(char * type, char * lg,char * str, char * data){

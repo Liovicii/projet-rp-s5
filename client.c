@@ -5,11 +5,18 @@
 
 int main(int argc, char **argv)
 {
-    int sockfd;
+    int sockfd,option_lue;
     char buf[MESS_MAX_SIZE];
 	char type[2];
 	char length[3];
-	
+	char hash[TAILLE_MAX_HASH];
+	char ip_hash[TAILLE_MAX_HASH+INET6_ADDRSTRLEN];
+	char ip[get_length_ip(length)+1];
+	struct sockaddr_in6 dest;
+	struct sockaddr_in6 client;
+	struct sockaddr_in6 my_addr;
+
+	//printf("argc %d\n",argc);
 	if(argc<=4){
 		switch(argc){
 			case 1:
@@ -21,16 +28,30 @@ int main(int argc, char **argv)
 			case 3:
 				fprintf(stderr,"Il doit manquer une commande et un hash\n");
 				break;
-			case 4:
-				fprintf(stderr,"Veuillez entrer une commande (get/set)\n");
-		}
-		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
-		exit(EXIT_FAILURE);
+			default:
+				if ( (strcmp("get",argv[3])!=0) && (strcmp("put",argv[3])!=0)){
+					fprintf(stderr,"usage: Commande invalide\n");
+					fprintf(stderr,"Veuillez entrer une commande valide <get|put>\n");
+				}
+			}
+			fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
+			exit(EXIT_FAILURE);
 	}
-	if(strcmp(argv[3],"get")==0){
+	
+
+	
+	if ( (strcmp("get",argv[3])==0)){
+		option_lue=GET;
+	}
+	else{
+		option_lue=PUT;
+	}
+
+	switch(option_lue){
+	case GET:
 		
 		//On envoie juste un message
-		struct sockaddr_in6 dest;
+		
 
 		// On verifie le nombre d'arguments
 		if(argc != 5)
@@ -41,118 +62,68 @@ int main(int argc, char **argv)
 		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		    exit(-1);
 		}
-		struct sockaddr_in6 my_addr;
+		
 		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-		
-		//my_addr=initv6(7000);
-		my_addr.sin6_port = htons(7000);
-		my_addr.sin6_family = AF_INET6;
-		int ret;
-		if((ret=inet_pton(AF_INET6,"::1",&my_addr.sin6_addr)) != 1)
-		{
-			if (ret == 0){
-				fprintf(stderr,"adresse invalide\n");
-				exit(EXIT_FAILURE);
-			}
-			perror("inet_pton\n");
-			fermer_socket(sockfd);
-			exit(EXIT_FAILURE);
-		}
-		
-		if(bind(sockfd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr_in6)) == -1)
-		{
-		  perror("bind");     
-		  fermer_socket(sockfd);
-		  exit(EXIT_FAILURE);
-		}
-		
-		char adr_ip2[INET6_ADDRSTRLEN];
-		if(inet_ntop(AF_INET6,&my_addr.sin6_addr,adr_ip2,INET6_ADDRSTRLEN)==NULL){
-			perror("inet_ntop\n");
-			exit(EXIT_FAILURE);		
-		}
-		fprintf(stderr,"Ip source: %s\n",adr_ip2);
-		//my_addr.sin6_addr = ret;
-		//setip6("2001:660:4701:6001:5580:7c97:2e4b:553d",&my_addr,sockfd);
-	/*
-		if(convert_ipv6("::1", "7800", &my_addr) == ERROR){
-			fprintf(stderr, "Erreur: convert_ipv6 failed\n");
-			exit(EXIT_FAILURE);
-		}
-	*/	
-		memset(buf,'\0',MESS_MAX_SIZE);
-		//On lie la structure au socket
-		//lier_socket6(sockfd, my_addr);
 
-		// on initialise la structure
-		dest=initv6(atoi(argv[2]));
+		my_addr.sin6_family = AF_INET6;
+		my_addr.sin6_addr = in6addr_any;
+		my_addr.sin6_flowinfo=1;
+		my_addr.sin6_scope_id = 0;		
+		my_addr.sin6_port = htons(7000);	
+
+		lier_socket6(sockfd,(struct sockaddr_in6 *)&my_addr);
+
 		
-		// On initialise l'ip du socket
+
+		// on le port de la destination
+		initv6(atoi(argv[2]),(struct sockaddr_in6 *)&dest);
+		
+		// On initialise l'ip de la destinations
 		setip6(argv[1],&dest,sockfd);
-		// On envoie le message
-		remplir_type(GET,type);
-		remplir_lg("",argv[4],length);
-		creation_chaine(type,length,concatener_ip_hash("",argv[4]),buf);
-		printf("message que l'on va envoyer: %s\n",buf);
+
+		//On met le buffer a 0 avant d'envoyer le message
+		memset(buf,'\0',MESS_MAX_SIZE);
 		
-		char * hashe;
-		hashe = extraire_hash_mess(buf);
-		printf("hash= %s\n",hashe);
-		printf("hash= %s\n",buf+4);
+		// On rempli le type
+		remplir_type(GET,type);
+		//On remplir la longueur
+		remplir_lg("",argv[4],length);
+		// On creer la chaine type + lg + ip + hash
+		concatener_ip_hash("",argv[4],ip_hash);
+		creation_chaine(type,length,ip_hash,buf);
+		printf("message que l'on va envoyer: %s\n",buf);
+
 		printf("On va envoyer le hash\n");
 		envoyer_mess6(sockfd,buf,dest);
 		//fermer_socket(sockfd);
 		printf("On a envoyé le hash\n");
 		
-		//On attends une reponse
-		
-		struct sockaddr_in6 client;
-		// On initilise le socket
-//		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-
-		
 		// reception de la chaine de caracteres
-		printf("On attends de recvoir un message\n");
-		char reponse[MESS_MAX_SIZE];
-		memset(reponse,'\0',MESS_MAX_SIZE);
-		int rec=recevoir_mess6(sockfd,reponse,MESS_MAX_SIZE,client);
+		printf("On attends de recevoir un message\n");
+		// On met le buffer a 0 avant de recevoir le message
+		memset(buf,'\0',MESS_MAX_SIZE);
+		initv6(sockfd,(struct sockaddr_in6 *)&client);
+		int rec=recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
 		printf("On a recu la reponse\n");
-		// print the received char
-		printf("Message recu: %s\n",reponse);
+		printf("Message recu: %s\n",buf);
 		printf("Longueur du message: %d\n",rec);
 	
-		char adr_ip[INET6_ADDRSTRLEN];
-		if(inet_ntop(AF_INET6,&client.sin6_addr,adr_ip,INET6_ADDRSTRLEN)==NULL){
-			perror("inet_ntop\n");
-			exit(EXIT_FAILURE);		
-		}
-		printf("Ip source: %s\n",adr_ip);
-		printf("Numero de port de l'expediteur: %d\n",client.sin6_port);
-		
 
-		char type_m[LENGTH_TYPE+1];
-		char lg_m[LENGTH_LG+1];
-		extract_string(buf,type_m,0,LENGTH_TYPE);
-		extract_string(buf,lg_m,1,LENGTH_LG);
+		extract_string(buf,type,0,LENGTH_TYPE);
+		extract_string(buf,length,1,LENGTH_LG);
+		extract_string(buf,ip,3,get_length_ip(length));
+		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
-		char hash[TAILLE_MAX_HASH];
-		char recup[get_length_ip(length)+1];
-		extract_string(reponse,recup,3,get_length_ip(lg_m));
-		extract_string(reponse,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
-
-		printf("Val type: %s\n",type_m);
-		printf("Val lg: %s\n",lg_m);
-		printf("Val ip mes: %s\n",recup);		
+		// hash va contenir les ip qui sont associes au hash sur le serveur
 		printf("Val h mes: %s\n",hash);	
 		// close the socket
 		close(sockfd);
-	}
-	else if(strcmp(argv[3],"put")==0){
+		break;
+	case PUT:
 		//check nb args == 6
 		//On envoie un message
-		struct sockaddr_in6 dest;
-
+		
 		// check the number of args on command line
 		if(argc != 6)
 		{
@@ -180,23 +151,17 @@ int main(int argc, char **argv)
 		
 		remplir_lg(argv[5],argv[4],length);
 		
-		creation_chaine(type,length,concatener_ip_hash(argv[5],argv[4]),buf);
+		concatener_ip_hash(argv[5],argv[4],ip_hash);
+		creation_chaine(type,length,ip_hash,buf);
 		
+		extract_string(buf,type,0,LENGTH_TYPE);
+		extract_string(buf,length,1,LENGTH_LG);
+		extract_string(buf,ip,3,get_length_ip(length));
+		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
-		
-		char type_m[LENGTH_TYPE+1];
-		char lg_m[LENGTH_LG+1];
-		extract_string(buf,type_m,0,LENGTH_TYPE);
-		extract_string(buf,lg_m,1,LENGTH_LG);
-
-		char hash[TAILLE_MAX_HASH];
-		char recup[get_length_ip(length)+1];		
-		extract_string(buf,recup,3,get_length_ip(lg_m));
-		extract_string(buf,hash,3+get_length_ip(lg_m),get_length_hash(lg_m));
-
-		printf("Val type: %s\n",type_m);
-		printf("Val lg: %s\n",lg_m);
-		printf("Val ip mes: %s\n",recup);		
+		printf("Val type: %s\n",type);
+		printf("Val lg: %s\n",length);
+		printf("Val ip mes: %s\n",ip);		
 		printf("Val h mes: %s\n",hash);
 		
 		printf("Message complet: %s\n",buf);
@@ -205,15 +170,15 @@ int main(int argc, char **argv)
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 	
 		// On initialise la structure 
-		dest=initv6(atoi(argv[2]));
+		initv6(atoi(argv[2]),(struct sockaddr_in6 *)&dest);
 		// On initialise l'ip de la structure
 		setip6(argv[1],&dest,sockfd);
 		// On envoie le message
 		envoyer_mess6(sockfd,buf,dest);
 		// On ferme le socket
 		fermer_socket(sockfd);
-	}
-	else{
+		break;
+	default:
 		fprintf(stderr,"Commande inconnue\n");
 		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
 		exit(EXIT_FAILURE);

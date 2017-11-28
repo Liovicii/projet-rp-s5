@@ -34,7 +34,7 @@ void fermer_socket(int sockfd);
  *\param port numero de port lié a la structure
  *\return retourne une structure si tous s'est bien passé
 */
-struct sockaddr_in6 initv6(int port);
+void initv6(int port, struct sockaddr_in6* dest);
 
 /**
  *\fn void setip6(char * ip,struct sockaddr_in6 * dest,int sockfd)
@@ -74,7 +74,7 @@ int recevoir_mess6(int sockfd,char * str,int size,struct sockaddr_in6 socket);
  *\param socket structure qu'on veut lier au socket
  *\return retourne rien si tous s'est bien passé
 */
-void lier_socket6(int sockfd, struct sockaddr_in6 socket);
+void lier_socket6(int sockfd, struct sockaddr_in6 * socket);
 
 /**
  *\fn char * concatener_ip_hash(char *ip,char *hash)
@@ -83,7 +83,7 @@ void lier_socket6(int sockfd, struct sockaddr_in6 socket);
  *\param hash chaine de caractere hash
  *\return retourne la concatenation de ip et hash
 */
-char * concatener_ip_hash(char *ip,char *hash);
+void concatener_ip_hash(char *ip,char *hash, char * str);
 
 /**
  *\fn void creation_chaine(char * type, char * lg,char * str, char * data)
