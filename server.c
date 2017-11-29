@@ -171,10 +171,6 @@ int main(int argc, char * argv[]){
                     strncpy(get, "no IP match with request", 24);
                 }
                 printf("GET: %s\n", get);
-                printf("PORT: %d\n", addr_dest.sin6_port);
-                inet_ntop(AF_INET6,&addr_dest.sin6_addr,ip_m,INET6_ADDRSTRLEN);
-                printf("IP: %s\n",ip_m); 
-           
                 // on doit envoyer un message au client
                 // creation du message
                 remplir_lg("", get, lg);
@@ -182,7 +178,7 @@ int main(int argc, char * argv[]){
                 creation_chaine(type, lg, get, mess);
 
                 envoyer_mess6(sock, mess, addr_dest);
-                free(get);
+                //free(get);
                 break;
           
             case NEW:
@@ -218,9 +214,6 @@ int main(int argc, char * argv[]){
    
         // remise à zéro
         type_mess = 0;
-        free(hash);
-        free(ip_m);
-		free(get);
 		memset(mess, '\0', MESS_MAX_SIZE);
 		memset(buf, '\0', MESS_MAX_SIZE);
 
