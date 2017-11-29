@@ -18,36 +18,34 @@ int main(int argc, char **argv)
 	struct sockaddr_in6 my_addr;
 
 	//printf("argc %d\n",argc);
-	if(argc<=4){
+
 		switch(argc){
-			case 1:
-				fprintf(stderr,"Il n'y a pas d'arguments\n");
+			case 5:
+				if ( (strcmp("get",argv[3])==0)){
+					option_lue=GET;
+				}
+				else if ( (strcmp("exit",argv[3])==0)){
+					option_lue=EXIT;
+				}
+				else{
+					fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",argv[0]);
+					exit(EXIT_FAILURE);
+				}
 				break;
-			case 2:
-				fprintf(stderr,"Il doit un port, une commande, un hash\n");
-				break;
-			case 3:
-				fprintf(stderr,"Il doit manquer une commande et un hash\n");
+			case 6:
+				if ( (strcmp("put",argv[3])==0)){
+					option_lue=GET;
+				}
+				else{
+					fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",argv[0]);
+					exit(EXIT_FAILURE);
+				}
 				break;
 			default:
-				if ( (strcmp("get",argv[3])!=0) && (strcmp("put",argv[3])!=0)){
-					fprintf(stderr,"usage: Commande invalide\n");
-					fprintf(stderr,"Veuillez entrer une commande valide <get|put>\n");
-				}
-			}
-			fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
-			exit(EXIT_FAILURE);
-	}
+				fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
+				exit(EXIT_FAILURE);
+		}
 	
-
-	
-	if ( (strcmp("get",argv[3])==0)){
-		option_lue=GET;
-	}
-	else{
-		option_lue=PUT;
-	}
-
 	switch(option_lue){
 	case GET:
 		
@@ -206,13 +204,11 @@ int main(int argc, char **argv)
 		}
 		dest.sin6_family=AF_INET6;
 		dest.sin6_port=htons(atoi(argv[2]));
-		remplir_lg(argv[5],argv[4],length);
+		remplir_lg("",argv[4],length);
 		// On initialise la chaine de caractere
 		memset(buf,'\0',MESS_MAX_SIZE);
 
 		//On rempli la structure dest
-		dest.sin6_family=AF_INET6;
-		dest.sin6_port=htons(atoi(argv[2]));
 		remplir_lg("",argv[4],length);
 		creation_chaine(type,length,argv[4],buf);
 		envoyer_mess6(sockfd,buf,dest);
