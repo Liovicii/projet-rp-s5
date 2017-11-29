@@ -191,6 +191,33 @@ int main(int argc, char **argv)
 		// On ferme le socket
 		fermer_socket(sockfd);
 		break;
+	case EXIT:
+		if(argc != 5)
+		{
+		    fprintf(stderr,"usage: %s @dest port_num exit hash \n", argv[0]);
+		    exit(-1);
+		}
+		//On initialise le socket
+		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
+		//On rempli le type du message
+		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+			fprintf(stderr,"je t'aime pas nah\n");
+			exit(EXIT_FAILURE);
+		}
+		dest.sin6_family=AF_INET6;
+		dest.sin6_port=htons(atoi(argv[2]));
+		remplir_lg(argv[5],argv[4],length);
+		// On initialise la chaine de caractere
+		memset(buf,'\0',MESS_MAX_SIZE);
+
+		//On rempli la structure dest
+		dest.sin6_family=AF_INET6;
+		dest.sin6_port=htons(atoi(argv[2]));
+		remplir_lg("",argv[4],length);
+		creation_chaine(type,length,argv[4],buf);
+		envoyer_mess6(sockfd,buf,dest);
+		fermer_socket(sockfd);
+		break;
 	default:
 		fprintf(stderr,"Commande inconnue\n");
 		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
