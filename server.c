@@ -67,16 +67,16 @@ int main(int argc, char * argv[]){
 
     // initialisations des variables
     int port, sock, type_mess, end = 0, test; //nb_server = 0, i;
-	socklen_t addrlen = sizeof(struct sockaddr_in6);
+    socklen_t addrlen = sizeof(struct sockaddr_in6);
     //int liste_server[MAX_SERVER];
     struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
     char *hash = NULL, *ip_m = NULL, *get = NULL;
     DHT * t = NULL;     // table des hashs
-	memset(mess, '\0', MESS_MAX_SIZE);
-	memset(buf, '\0', MESS_MAX_SIZE);
-	memset(lg, '\0', 3);
-	memset(type, '\0', 2);
+    memset(mess, '\0', MESS_MAX_SIZE);
+    memset(buf, '\0', MESS_MAX_SIZE);
+    memset(lg, '\0', 3);
+    memset(type, '\0', 2);
 
     // vérification des arguments
     if(argc != 3){
@@ -127,26 +127,25 @@ int main(int argc, char * argv[]){
     while(end != 1){
         
         if(recvfrom(sock, buf, MESS_MAX_SIZE, 0,
-			(struct sockaddr *)&addr_dest, &addrlen) == ERROR){
-			perror("recvfrom");
-			close(sock);
-			exit(EXIT_FAILURE);
-		}
+            (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
+            perror("recvfrom");
+            close(sock);
+            exit(EXIT_FAILURE);
+        }
 
         // analyse du message
         type_mess = get_type_from_mess(buf);
         hash = extraire_hash_mess(buf);
-        ip_m = extraire_ip_mess(buf);
 
         // on détermine ce qu'on doit faire
         switch(type_mess){
     
             case PUT:
+                 ip_m = extraire_ip_mess(buf);
                 // message de type PUT
                 if((test = put_hash(hash, ip_m, &t)) == ERROR){
                     fprintf(stderr, "put_hash failed\n");
-				}
-				printf("TEST= %d\n", test);
+                }
                 // on doit envoyer le hash aux autres serveurs !
                 if(test != NTD){
                     printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
@@ -160,6 +159,8 @@ int main(int argc, char * argv[]){
                         creation_chaine(type, lg, mess, hash);
                         envoyer_mess6(liste_server[i], mess, addr_dest); 
                     }*/
+					free(ip_m);
+					free(hash);
                 }
                 break;
 
@@ -167,8 +168,8 @@ int main(int argc, char * argv[]){
                 // message de type GET
                 get = get_hash(hash, t);
                 if(get == NULL){
-					get = malloc(24);
-                    strncpy(get, "no IP match with request", 24);
+                    get = malloc(25);
+                    memcpy(get, "no IP match with request\0", 25);
                 }
                 printf("GET: %s\n", get);
                 // on doit envoyer un message au client
@@ -178,7 +179,8 @@ int main(int argc, char * argv[]){
                 creation_chaine(type, lg, get, mess);
 
                 envoyer_mess6(sock, mess, addr_dest);
-                //free(get);
+                free(get);
+				free(hash);
                 break;
           
             case NEW:
@@ -192,11 +194,14 @@ int main(int argc, char * argv[]){
 
             case HAVE:
                 // un serveur nous informe de ses modification
+                ip_m = extraire_ip_mess(buf);
                 printf("Reception d'une nouvelle entree\n");
                 if((test = put_hash(hash, ip_m, &t)) == ERROR){
                     fprintf(stderr, "put_hash failed\n");
                 }
                 printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+				free(ip_m);
+				free(hash);
                 break;
 
             case EXIT:
@@ -213,9 +218,8 @@ int main(int argc, char * argv[]){
         } // fin switch
    
         // remise à zéro
-        type_mess = 0;
-		memset(mess, '\0', MESS_MAX_SIZE);
-		memset(buf, '\0', MESS_MAX_SIZE);
+        memset(mess, '\0', MESS_MAX_SIZE);
+        memset(buf, '\0', MESS_MAX_SIZE);
 
     } // fin boucle 
 

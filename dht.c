@@ -40,7 +40,7 @@ int parse_hostname(char * hostname, char * port, char * ip){
 int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
     int convert;
     char ip[INET6_ADDRSTRLEN];
-	memset(ip, '\0', INET6_ADDRSTRLEN);
+    memset(ip, '\0', INET6_ADDRSTRLEN);
     convert = inet_pton(AF_INET6, ip, (void*)addr->sin6_addr.s6_addr);
     if(convert <= 0){
         if(convert == 0){
@@ -231,8 +231,8 @@ char * get_hash(char * hash, DHT * table){
     }
     
     tmp_dht = table;
-    ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
-	memset(ips, '\0', INET6_ADDRSTRLEN*MAX_IPS);
+    ips = malloc(INET6_ADDRSTRLEN*MAX_IPS+MAX_IPS);
+    memset(ips, '\0', INET6_ADDRSTRLEN*MAX_IPS+MAX_IPS);
     // on cherche le hash
     while(strcmp(hash,tmp_dht->val) != 0){
         tmp_dht = tmp_dht->next;
@@ -266,8 +266,6 @@ char * get_hash(char * hash, DHT * table){
     }
     //strncat(ips, "\0", 1);
 
-    printf("IPS: %s longueur chaine:%ld\n", ips, strlen(ips));
-
     return ips;
 }
 
@@ -285,7 +283,7 @@ char * get_hash(char * hash, DHT * table){
 int insert_hash(char * hash, DHT * table){
 
     DHT *tmp_dht = table, *new;
-	
+    
     // vérification des arguments
     if(hash == NULL){
         fprintf(stderr, "Erreur: insert_hash");
@@ -350,7 +348,7 @@ int insert_hash(char * hash, DHT * table){
 int insert_ip(DHT * hash, char * ip, int liste){
    
     IP * tmp_ip, *new;
-	
+    
     // verification des arguments
     if(ip == NULL){
         fprintf(stderr, "Erreur: insert_ip");
@@ -371,20 +369,23 @@ int insert_ip(DHT * hash, char * ip, int liste){
     }
 
     // on regarde si l'ip est déjà dans la liste
-    if(tmp_ip != NULL){
+/*    if(tmp_ip != NULL){
         if(strncmp(tmp_ip->val, ip,strlen(ip)) == 0){
             printf("\tIP %s already in list\n", ip);
             return NTD;
-        }
+        }*/
         // on parcours la liste
-        while((tmp_ip->next != NULL)){
+        while((tmp_ip != NULL)){
             if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
                 printf("\tIP %s already in list\n", ip);
                 return NTD;
             }
+            if(tmp_ip->next == NULL){
+                break;
+            }
             tmp_ip = tmp_ip->next;
         }
-    }
+  //  }
 
     // creation de l'ip_cel
     new = malloc(sizeof(struct ip_cel));
@@ -419,7 +420,7 @@ int insert_ip(DHT * hash, char * ip, int liste){
 int put_hash(char * hash, char * ip, DHT ** table){
 
     DHT * tmp_dht;
-	int r;
+    int r;
     // check args.
     if(hash == NULL){
         fprintf(stderr, "Erreur: put_hash");
