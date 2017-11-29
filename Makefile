@@ -1,22 +1,23 @@
 CFLAGS=-Wall -Wextra -Werror -g
 EXEC=server client
 COV=-fprofile-arcs -ftest-coverage
+THREAD=-l pthread
 
 
 # compilation de tous les programmes
 all: $(EXEC)
 
-server: dht.o fctsocket.o
-	gcc server.c $^ -o $@ $(CFLAGS)
+server: dht.o fctsocket.o server.c
+	gcc $^ -o $@ $(CFLAGS) $(TREAD)
 
 client: dht.o client.c fctsocket.o
-	gcc client.c dht.o fctsocket.o -o $@ $(CFLAGS)
+	gcc $^ -o $@ $(CFLAGS)
 
 dht.o: dht.c dht.h
 	gcc -c $< $(CFLAGS)
 
 fctsocket.o: fctsocket.h fctsocket.c
-	gcc -c fctsocket.h fctsocket.c $(CFLAGS)
+	gcc -c $^ $(CFLAGS)
 
 # exécution des scripts de tests 
 test:

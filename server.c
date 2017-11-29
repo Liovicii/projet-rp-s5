@@ -1,5 +1,6 @@
 #include "dht.h"
 #include "fctsocket.h"
+#include <pthread.h>
 
 
 
@@ -10,7 +11,7 @@
  * \param arg Nom du programme
  */
 void usage(char * arg){
-    fprintf(stderr, "usage: %s IP PORT\n", arg);
+    fprintf(stderr, "usage: %s IP PORT [-c IP PORT]\n", arg);
     fprintf(stderr, "For help use --help\n");
     fprintf(stderr, "For version use --version\n");
     exit(EXIT_FAILURE);
@@ -31,11 +32,13 @@ void parse_option(char * arg[]){
     
     if(strcmp("--help", arg[1]) == 0){
         // option --help
-        printf("Utilisation : %s IPv6 PORT\n", arg[0]);
+        printf("Utilisation : %s IPv6 PORT [-c IP PORT]\n", arg[0]);
         printf("         ou : %s --help | --version\n", arg[0]);
         printf("Lance un serveur configuré comme suit:\n");
         printf("  - adresse IPv6: argument IPv6\n");
         printf("  - numéro de port: argument PORT\n");
+        printf("Option -c permet de se connecter à un serveur:\n");
+        printf(" - %s mon_IP mon_PORT -c IP_serveur PORT_serveur\n", arg[0]);
         exit(EXIT_SUCCESS);
     }
 
@@ -53,6 +56,22 @@ void parse_option(char * arg[]){
 
 
 
+/*
+ * \fn
+ * \brief
+ *
+ * \param
+ */
+static void * keep_alive (void * server){
+	// keep alive avec les server
+	struct sockaddr_in6 * liste = server;
+	while(1){
+	
+	}
+	return NULL;
+}
+
+
 
 
 /**
@@ -66,26 +85,42 @@ void parse_option(char * arg[]){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, type_mess, end = 0, test; //nb_server = 0, i;
+    int port, sock, type_mess, end = 0, test;
+	int connexion = 0, nb_server = 0, sock_serv;
     socklen_t addrlen = sizeof(struct sockaddr_in6);
-    //int liste_server[MAX_SERVER];
+    struct sockaddr_in6 liste_server[MAX_SERVER];
     struct sockaddr_in6 addr_server, addr_dest;
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
     char *hash = NULL, *ip_m = NULL, *get = NULL;
-    DHT * t = NULL;     // table des hashs
+    DHT * t = NULL; 
+	pthread_t ta;
+    
     memset(mess, '\0', MESS_MAX_SIZE);
     memset(buf, '\0', MESS_MAX_SIZE);
     memset(lg, '\0', 3);
     memset(type, '\0', 2);
 
-    // vérification des arguments
-    if(argc != 3){
-        // on regarde si on a l'option --help ou --version
-        if(argc == 2){
-            parse_option(argv);
-        }
-        usage(argv[0]);
-    }
+	// verification des arguments
+	switch(argc){
+		case 2:
+			parse_option(argv);
+			break;
+		case 3:
+			// cas normal, on continue le programme
+			break;
+		case 6:
+			// cas avec demande de connexion (option -c)
+			if(strcmp(argv[3], "-c") != 0){
+				fprintf(stderr, "Erreur: %s option inconnue\n", argv[3]);
+			}
+			add_server(liste_server, argv[4], argv[5], &nb_server);
+			connexion = 1;
+			break;
+		default:
+			// erreur nombre d'arguments
+			usage(argv[0]);
+			break;
+	}
 
 
     // vérification du port
@@ -101,7 +136,7 @@ int main(int argc, char * argv[]){
     } 
 
 
-    // initialisation socket
+    // initialisation socket client
     sock = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
 
@@ -115,12 +150,14 @@ int main(int argc, char * argv[]){
 
 
     // on dit aux autres serveurs qu'on est là
+   	if(connexion == 1){
+		// init socket serveur
+		sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+		lier_socket6(sock_serv, &addr_server);
 
-
-    // lancement d'un ps fils qui s'occupe du keep alive
-
-
-    // lancement d'un ps fils qui s'occupe de l'obsolescence des données
+		// lancement d'un thread qui s'occupe du keep alive
+   		pthread_create(&ta, NULL, keep_alive, &liste_server);
+	}
 
 
     // communications du serveur
@@ -149,18 +186,8 @@ int main(int argc, char * argv[]){
                 // on doit envoyer le hash aux autres serveurs !
                 if(test != NTD){
                     printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
-                    // envoyer le hash aux serveurs voisins
-                    /*addr_dest.sin6_family = AF_INET6;
-                    addr_dest.sin6_port = htons(port);
-                    remplir_type(HAVE, type);
-
-                    for(i = 1; i < nb_server; i++){
-                        //remplir_lg( ??? , hash, lg);
-                        creation_chaine(type, lg, mess, hash);
-                        envoyer_mess6(liste_server[i], mess, addr_dest); 
-                    }*/
-					free(ip_m);
-					free(hash);
+                    free(ip_m);
+                    free(hash);
                 }
                 break;
 
@@ -180,7 +207,7 @@ int main(int argc, char * argv[]){
 
                 envoyer_mess6(sock, mess, addr_dest);
                 free(get);
-				free(hash);
+                free(hash);
                 break;
           
             case NEW:
@@ -200,8 +227,8 @@ int main(int argc, char * argv[]){
                     fprintf(stderr, "put_hash failed\n");
                 }
                 printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
-				free(ip_m);
-				free(hash);
+                free(ip_m);
+                free(hash);
                 break;
 
             case EXIT:
@@ -225,6 +252,9 @@ int main(int argc, char * argv[]){
 
     printf("Arret du serveur %s\n", argv[1]);
    
+	// arret du keep alive
+	pthread_exit(&ta);
+
     // il faut notifier les autres serveurs qu'on s'arrete
 
     // fermeture du socket
