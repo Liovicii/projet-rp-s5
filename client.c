@@ -202,9 +202,9 @@ int main(int argc, char **argv)
 			fprintf(stderr,"je t'aime pas nah\n");
 			exit(EXIT_FAILURE);
 		}
+		remplir_type(EXIT,type);
 		dest.sin6_family=AF_INET6;
 		dest.sin6_port=htons(atoi(argv[2]));
-		remplir_lg("",argv[4],length);
 		// On initialise la chaine de caractere
 		memset(buf,'\0',MESS_MAX_SIZE);
 
