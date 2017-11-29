@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <string.h>
+#include <time.h>
 
 
 #define ERROR           -1    // Retour de fonction pour les erreurs
@@ -19,6 +20,7 @@
 #define TAILLE_MAX_HASH 1000  // taille max d'un hash
 #define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
 #define MAX_SERVER      10    // nombre max de serveur qu'on peut connaitre
+#define TIME_LIMIT      5     // obsolescence après 30 secondes
 
 #define PASS            "password123" // mot de passe serveur 
 
@@ -62,6 +64,7 @@ typedef struct hash_cel{
     struct hash_cel * next;
     struct ip_cel * want;
     struct ip_cel * have;
+    time_t maj;
 }DHT;
 
 
@@ -128,14 +131,27 @@ int check_access_code(char * code);
 
 
 /*
- * \fn void supp_server (char ** liste, int i, int *nb)
+ * \fn void supp_server (struct sockaddr_in6 * liste, int i, int *nb)
  * \brief Supprimer le ieme élement de la liste "liste"
  *
  * \param liste Une liste d'adresse IP de serveur
  * \param i L'élément de la liste à supprimer
  * \param nb Le nombre d'éléments de la liste
  */
-void supp_server(char ** liste, int i, int *nb);
+void supp_server(struct sockaddr_in6 * liste, int i, int *nb);
+
+
+/*
+ * \fn void add_server(struct sockaddr_in6*liste,char*ip,char*port,int*nb)
+ * \breif Ajoute l'adresse d'un serveur dans une liste de serveur
+ *
+ * \param liste Une liste d'adresse de serveur
+ * \param ip L'ip du serveur à ajouter
+ * \param port Le port du serveur à ajouter
+ * \nb Le nombre de serveur déjà dans la liste
+ */
+void add_server(struct sockaddr_in6*liste,char*ip,char*port,int*nb);
+
 
 
 

@@ -88,24 +88,32 @@ int check_access_code(char * code){
 /***** LISTE DES SERVER *****/
 
 
-void add_server(char ** liste, char * ip, int * nb){
-    // si on a une liste remplie
+void add_server(struct sockaddr_in6 * liste, char * ip, char * port, int * nb){
     if(*nb == MAX_SERVER - 1){    
         fprintf(stderr, "La liste des serveurs est remplie\n");
         fprintf(stderr, "server %s pas ajoute\n", ip);
         return;
     }
-    liste[*nb] = ip;
+    if(port_valide(port) == ERROR){
+        fprintf(stderr, "Erreur: port du server à ajouter invalide\n");
+        fprintf(stderr, "serveur %s pas ajoute\n", ip);
+        return;
+    }
+    struct sockaddr_in6 new;
+    new.sin6_family = AF_INET6;
+    new.sin6_port = htons(atoi(port));
+    convert_ipv6(ip, port, &new);
+    liste[*nb] = new;
     *nb = *nb+1;
 }
 
 
-void supp_server(char ** liste, int i, int * nb){
-    int j;
-    nb--;
-    for(j = i; j < *nb; j++){
+void supp_server(struct sockaddr_in6 * liste, int i, int * nb){
+    int j; 
+    for(j = i; j < *nb-1; j++){
         liste[j] = liste[j+1];
     }
+    *nb = *nb-1;
 }
 
 
@@ -127,7 +135,11 @@ DHT * init_dht(char * hash){
     }
     table->next = NULL;
     table->want = NULL;
-    table->have = NULL;    
+    table->have = NULL;
+    if(time(&(table->maj)) == (time_t)ERROR){
+        perror("Time");
+        exit(EXIT_FAILURE);
+    }
     return table;
 }
 
@@ -243,7 +255,15 @@ char * get_hash(char * hash, DHT * table){
             return NULL;
         }
     }
-    
+
+    // on vérifie que le hash n'est pas obsolète
+    if(time(NULL) - tmp_dht->maj > TIME_LIMIT){
+        fprintf(stderr, "Erreur: le hash %s est obsolete\n", hash);
+        // suppresion du hash
+        delete_hash(hash, &table);
+        return NULL;
+    }
+
     // on crée la chaine qui contiendra la liste des IP qui possède le hash
     tmp_ip = tmp_dht->have;
     if(tmp_ip == NULL){
@@ -326,6 +346,11 @@ int insert_hash(char * hash, DHT * table){
     new->next = NULL;
     new->want = NULL;
     new->have = NULL;
+
+    if(time(&(new->maj)) == (time_t)ERROR){
+        perror("Time");
+        exit(EXIT_FAILURE);
+    }
     
     // on attache l'élément new en fin de chaine
     tmp_dht->next = new;
@@ -454,7 +479,7 @@ int put_hash(char * hash, char * ip, DHT ** table){
             fprintf(stderr, "\tInsertion hash failed\n");
             return ERROR;
         }
-         // tmp_dht = à l'adresse du nouveau hash
+        // tmp_dht = à l'adresse du nouveau hash
         tmp_dht = *table;
         while(tmp_dht->next != NULL) tmp_dht = tmp_dht->next;
     }
@@ -479,6 +504,12 @@ int put_hash(char * hash, char * ip, DHT ** table){
         strncpy(tmp_dht->have->val, ip, strlen(ip));
         tmp_dht->have->next = NULL;
     }
+
+	// mise à jour de l'obsolescence programmé
+	if(time(&(tmp_dht->maj)) == (time_t)ERROR){
+		perror("Time");
+		exit(EXIT_FAILURE);
+	}
 
     // houf, tout s'est bien passé
     return 0;
