@@ -218,7 +218,6 @@ char * get_hash(char * hash, DHT * table){
     IP * tmp_ip;
     char * ips;  
     int c=0;
-
     // vérification des arguments
     if(hash == NULL){
         fprintf(stderr, "Erreur: get_hash");
@@ -232,8 +231,8 @@ char * get_hash(char * hash, DHT * table){
     }
     
     tmp_dht = table;
-    ips = malloc(INET6_ADDRSTRLEN*MAX_IPS+1);
-	
+    ips = malloc(INET6_ADDRSTRLEN*MAX_IPS);
+	memset(ips, '\0', INET6_ADDRSTRLEN*MAX_IPS);
     // on cherche le hash
     while(strcmp(hash,tmp_dht->val) != 0){
         tmp_dht = tmp_dht->next;
@@ -252,10 +251,12 @@ char * get_hash(char * hash, DHT * table){
         fprintf(stderr, "\tnobody has hash %s :(\n", hash);
         return NULL;
     }
+    
     // on inserera au maximum 10 adresses IP
     while((tmp_ip != NULL) && (c < 10)){
-        strncat(ips, " ", 1);
+        
         strncat(ips, tmp_ip->val, strlen(tmp_ip->val));
+        strncat(ips, " ", 1);
         if(ips == NULL){
             fprintf(stderr, "Erreur: get_hash");
             fprintf(stderr, "\tstrncat: ips has value %s\n", ips);
@@ -263,9 +264,9 @@ char * get_hash(char * hash, DHT * table){
         tmp_ip = tmp_ip->next;
         c++;
     }
-    strncat(ips, "\0", 1);
+    //strncat(ips, "\0", 1);
 
-    printf("IPS: %s %ld\n", ips, strlen(ips));
+    printf("IPS: %s longueur chaine:%ld\n", ips, strlen(ips));
 
     return ips;
 }
@@ -284,7 +285,7 @@ char * get_hash(char * hash, DHT * table){
 int insert_hash(char * hash, DHT * table){
 
     DHT *tmp_dht = table, *new;
-
+	
     // vérification des arguments
     if(hash == NULL){
         fprintf(stderr, "Erreur: insert_hash");
@@ -349,7 +350,7 @@ int insert_hash(char * hash, DHT * table){
 int insert_ip(DHT * hash, char * ip, int liste){
    
     IP * tmp_ip, *new;
-
+	
     // verification des arguments
     if(ip == NULL){
         fprintf(stderr, "Erreur: insert_ip");
@@ -371,13 +372,13 @@ int insert_ip(DHT * hash, char * ip, int liste){
 
     // on regarde si l'ip est déjà dans la liste
     if(tmp_ip != NULL){
-        if(strcmp(tmp_ip->val, ip) == 0){
+        if(strncmp(tmp_ip->val, ip,strlen(ip)) == 0){
             printf("\tIP %s already in list\n", ip);
             return NTD;
         }
         // on parcours la liste
         while((tmp_ip->next != NULL)){
-            if(strcmp(tmp_ip->val, ip) == 0){
+            if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
                 printf("\tIP %s already in list\n", ip);
                 return NTD;
             }
@@ -394,7 +395,8 @@ int insert_ip(DHT * hash, char * ip, int liste){
     }
 
     // remplissage de l'ip_cel
-    strncpy(new->val, ip, strlen(ip));
+    memcpy(new->val, ip, strlen(ip));
+    new->val[strlen(ip)]='\0';
     //strncpy(new->val, "\0", 1);
     if(new->val == NULL){
         fprintf(stderr, "Erreur: insert_ip");
@@ -417,7 +419,7 @@ int insert_ip(DHT * hash, char * ip, int liste){
 int put_hash(char * hash, char * ip, DHT ** table){
 
     DHT * tmp_dht;
-
+	int r;
     // check args.
     if(hash == NULL){
         fprintf(stderr, "Erreur: put_hash");
@@ -458,11 +460,12 @@ int put_hash(char * hash, char * ip, DHT ** table){
 
     // le hash existe ou a été créé, on insert l'IP
     if(tmp_dht->have != NULL){
-        if(insert_ip(tmp_dht, ip, HAVE) == ERROR){
+        if((r=insert_ip(tmp_dht, ip, HAVE)) == ERROR){
             fprintf(stderr, "Erreur: put_hash");
             fprintf(stderr, "\tInsertion IP failed\n");
             return ERROR;
         }
+        if(r==NTD) return NTD;
     }
     else{
         // creation manuelle car la liste n'existe pas encore
