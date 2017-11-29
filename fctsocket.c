@@ -131,7 +131,10 @@ void remplir_type(int val_type, char * type){
 }
 
 void extract_string(char * entree,char * sortie, int indice, int t_a_extr){
-	strncpy(sortie,entree+indice,t_a_extr);
+	//strncpy(sortie,entree+indice,t_a_extr);
+	sortie=memcpy(sortie,entree+indice,t_a_extr);
+	//printf("Sortie= %s\n",sortie);
+	//sortie[t_a_extr];
 	sortie[(t_a_extr)]='\0';
 	return;
 }
@@ -161,20 +164,22 @@ void extraire_taille_mess(char * lg_m,char *mes){
 	return;
 }
 char * extraire_ip_mess(char * mes){
-	char lg_m[LENGTH_LG+1];
+	char lg_m[3];
+	int lg;
 	extraire_taille_mess(lg_m,mes);
-	char * ip=malloc(get_length_ip(lg_m));
+	lg=get_length_ip(lg_m);
+	char *ip=malloc((lg));
 	if (ip ==NULL){
 		fprintf(stderr,"Erreur extraire_ip_mess\n");
 		fprintf(stderr,"On a pas reussi a llouer la memoire\n");
 		exit(EXIT_FAILURE);
 	}
-	extract_string(mes,ip,3,get_length_ip(lg_m));
+	extract_string(mes,ip,3,lg);
 	return ip;
 }
 
 char * extraire_hash_mess(char * mes){
-	char lg_m[LENGTH_LG+1];
+	char lg_m[4];
 	extraire_taille_mess(lg_m,mes);
 	char * hash=malloc(TAILLE_MAX_HASH+1);
 	if (hash ==NULL){

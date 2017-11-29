@@ -187,6 +187,7 @@ int main(int argc, char **argv)
 		// On envoie le message
 
 		envoyer_mess6(sockfd,buf,dest);
+		printf("Me: %s\n",buf);
 		// On ferme le socket
 		fermer_socket(sockfd);
 		break;
