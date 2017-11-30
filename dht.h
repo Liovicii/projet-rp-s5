@@ -25,14 +25,7 @@
 #define PASS            "password123" // mot de passe serveur 
 
 /* Définition des types pour les messages */
-#define GET     1
-#define PUT     2
-#define WANT    3
-#define HAVE    4
-#define EXIT    5
-#define NEW     6
-#define DECO    7
-
+enum {GET, PUT, WANT, HAVE, EXIT, NEW, DECO, KEEP_ALIVE};
 
 /**
  * \def PERRORMSG(cmd, msg)
@@ -67,6 +60,17 @@ typedef struct hash_cel{
     time_t maj;
 }DHT;
 
+/*
+ * \struct ka_data dht.h
+ * \brief Contient les donnés nécessaire au thread chargé keep alive
+ */
+struct ka_data{
+    int sockfd;
+    int nb_serv;
+    pthread_mutex_t acces_table;
+    pthread_mutex_t acces_liste;
+    struct sockaddr_in6 * liste;
+};
 
 
 /**

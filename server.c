@@ -56,19 +56,75 @@ void parse_option(char * arg[]){
 
 
 
-/*
- * \fn
+/* \fn
  * \brief
  *
  * \param
+ *//*
+static void * recv_server (void * infos){
+    if(infos == NULL){
+        return NULL;
+    }
+    struct ka_data * args = infos;    
+    struct sockaddr_in6 addr_dest;
+    socklen_t addrlen = sizeof(struct sockaddr_in6);
+    char buf[MESS_MAX_SIZE];
+
+    // attente d'un message du serveur    
+    if(recvfrom(args->sockfd, buf, MESS_MAX_SIZE, 0,
+        (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
+        perror("recvfrom");
+           close(args->sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+
+    return NULL;
+}
+
+*/
+
+
+
+
+/*
+ * \fn static void * keep_alive (void * server)
+ * \brief Fonction appelé par un thread qui s'occupe du keep
+ *     alive entre les serveurs.
+ *
+ * \param server Une structure contenant les données nécessaires
  */
 static void * keep_alive (void * server){
-	// keep alive avec les server
-	struct sockaddr_in6 * liste = server;
-	while(1){
-	
-	}
-	return NULL;
+    // keep alive avec les server
+    int i;
+    socklen_t addrlen = 2;
+    struct sockaddr_in6 addr_dest;
+    struct ka_data * args;
+    char buf[2]; 
+    memset(buf, '\0', 2);
+
+    if(server != NULL) args = server;
+    else return NULL;
+
+    while(1){
+        for(i = 0; i < args->nb_serv; i++){
+            remplir_type(KEEP_ALIVE, buf);
+            creation_chaine(buf, "", "", "");
+            // on demande si le serveur est en vie
+            envoyer_mess6(args->sockfd, buf, args->liste[i]);
+            memset(buf, '\0', 2);
+            // on attend un réponse
+            if(recvfrom(args->sockfd, buf, MESS_MAX_SIZE, 0,
+                (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
+                perror("recvfrom");
+                close(args->sockfd);
+                exit(EXIT_FAILURE);
+            }
+            memset(buf, '\0', 2);
+
+        } // fin for
+    } // fin while
+    return NULL;
 }
 
 
@@ -86,41 +142,48 @@ int main(int argc, char * argv[]){
 
     // initialisations des variables
     int port, sock, type_mess, end = 0, test;
-	int connexion = 0, nb_server = 0, sock_serv;
+    int connexion = 0, nb_server = 0, sock_serv;
+
     socklen_t addrlen = sizeof(struct sockaddr_in6);
     struct sockaddr_in6 liste_server[MAX_SERVER];
-    struct sockaddr_in6 addr_server, addr_dest;
+    struct sockaddr_in6 addr_server, addr_server_threads;
+    struct sockaddr_in6 addr_dest;
+    
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
     char *hash = NULL, *ip_m = NULL, *get = NULL;
+  
     DHT * t = NULL; 
-	pthread_t ta;
+    pthread_t recv_server_thread;
+    pthread_t send_server_thread;
+    pthread_t keep_alive_thread;
+    struct ka_data thread_arg;
     
     memset(mess, '\0', MESS_MAX_SIZE);
     memset(buf, '\0', MESS_MAX_SIZE);
     memset(lg, '\0', 3);
     memset(type, '\0', 2);
 
-	// verification des arguments
-	switch(argc){
-		case 2:
-			parse_option(argv);
-			break;
-		case 3:
-			// cas normal, on continue le programme
-			break;
-		case 6:
-			// cas avec demande de connexion (option -c)
-			if(strcmp(argv[3], "-c") != 0){
-				fprintf(stderr, "Erreur: %s option inconnue\n", argv[3]);
-			}
-			add_server(liste_server, argv[4], argv[5], &nb_server);
-			connexion = 1;
-			break;
-		default:
-			// erreur nombre d'arguments
-			usage(argv[0]);
-			break;
-	}
+    // verification des arguments
+    switch(argc){
+        case 2:
+            parse_option(argv);
+            break;
+        case 3:
+            // cas normal, on continue le programme
+            break;
+        case 6:
+            // cas avec demande de connexion (option -c)
+            if(strcmp(argv[3], "-c") != 0){
+                fprintf(stderr, "Erreur: %s option inconnue\n", argv[3]);
+            }
+            add_server(liste_server, argv[4], argv[5], &nb_server);
+            connexion = 1;
+            break;
+        default:
+            // erreur nombre d'arguments
+            usage(argv[0]);
+            break;
+    }
 
 
     // vérification du port
@@ -150,14 +213,13 @@ int main(int argc, char * argv[]){
 
 
     // on dit aux autres serveurs qu'on est là
-   	if(connexion == 1){
-		// init socket serveur
-		sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-		lier_socket6(sock_serv, &addr_server);
+       if(connexion == 1){
+        // init socket serveur
+        sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+        lier_socket6(sock_serv, &addr_server);
 
-		// lancement d'un thread qui s'occupe du keep alive
-   		pthread_create(&ta, NULL, keep_alive, &liste_server);
-	}
+        // lancement d'un thread qui s'occupe de la reception des serveurs
+    }
 
 
     // communications du serveur
@@ -234,8 +296,18 @@ int main(int argc, char * argv[]){
             case EXIT:
                 // on demande au serveur de s'arreter
                 // on vérifie le code d'acces
-                if(check_access_code(hash) == 0) end = 1;
-                else end = 0;
+                printf("Demande d'arret\n");
+                if(check_access_code(hash) == 0){
+                    printf("mot de passe correct\n");
+                    // arret du keep alive
+                //    pthread_exit(&serveur__thread);
+                    end = 1;
+                }
+                else{
+                    printf("mot de passe incorrect\n");
+                    end = 0;
+                }
+                free(hash);
                 break;
 
             default:
@@ -248,13 +320,10 @@ int main(int argc, char * argv[]){
         memset(mess, '\0', MESS_MAX_SIZE);
         memset(buf, '\0', MESS_MAX_SIZE);
 
-    } // fin boucle 
+    } // fin boucle while (si end == 1) 
 
     printf("Arret du serveur %s\n", argv[1]);
    
-	// arret du keep alive
-	pthread_exit(&ta);
-
     // il faut notifier les autres serveurs qu'on s'arrete
 
     // fermeture du socket
