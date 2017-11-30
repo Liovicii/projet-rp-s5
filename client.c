@@ -2,6 +2,16 @@
 #include "fctsocket.h"
 
 
+/*
+ * \fn void usage (char * arg)
+ * \brief Fonction usage; affiche le fonctionnement du programme
+ * \param arg Le nom du programme (généralement argv[0]).
+ */
+void usage(char * arg){
+	fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",arg);
+	exit(EXIT_FAILURE);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -23,45 +33,47 @@ int main(int argc, char **argv)
 			case 5:
 				if ( (strcmp("get",argv[3])==0)){
 					option_lue=GET;
+					//On regarde si le hash est valide
+					if(check_hash(argv[4])==-1){
+						fprintf(stderr,"Erreur: le hash n'est pas assez long\n");
+						usage(argv[0]);
+					}
 				}
 				else if ( (strcmp("exit",argv[3])==0)){
 					option_lue=EXIT;
 				}
 				else{
-					fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",argv[0]);
-					exit(EXIT_FAILURE);
+					usage(argv[0]);
 				}
 				break;
 			case 6:
 				if ( (strcmp("put",argv[3])==0)){
 					option_lue=GET;
+					//On regarde si le hash est valide
+					if(check_hash(argv[4])==-1){
+						fprintf(stderr,"Erreur: le hash n'est pas assez long\n");
+						usage(argv[0]);
+					}
 				}
 				else{
-					fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",argv[0]);
-					exit(EXIT_FAILURE);
+					usage(argv[0]);
 				}
 				break;
 			default:
-				fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
-				exit(EXIT_FAILURE);
+				usage(argv[0]);
 		}
+	
+	// verification du port
+	if(port_valide(argv[3])	== ERROR){
+		fprintf(stderr, "Erreur: %d port invalide", atoi(argv[3]));
+		usage(argv[0]);
+	}
 	
 	switch(option_lue){
 	case GET:
 		
 		//On envoie juste un message
-		
 
-		// On verifie le nombre d'arguments
-		if(argc != 5)
-		{
-			if(argc == 4){
-					fprintf(stderr,"Il doit manquer le hash\n");		
-			}
-		    fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
-		    exit(-1);
-		}
-		
 		// On creer le socket ipV6
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 
@@ -127,30 +139,8 @@ int main(int argc, char **argv)
 		//check nb args == 6
 		//On envoie un message
 		
-		// check the number of args on command line
-		if(argc != 6)
-		{
-			switch(argc){
-				case 4:
-					fprintf(stderr,"Il doit manquer le hash et l'ip\n");
-					break;
-				case 5:
-					fprintf(stderr,
-					"Il doit manquer l'ip qu'on va associer au hash\n");		
-			}
-		    printf("USAGE: %s @dest port_num put hash ip\n", argv[0]);
-		    exit(-1);
-		}
-				
 		remplir_type(PUT,type);
 		memset(buf,'\0',MESS_MAX_SIZE);
-
-			
-		//On regarde si le hash est valide
-		if(check_hash(argv[4])==-1){
-			fprintf(stderr,"usage: le hash n'est pas assez long\n");
-			exit(EXIT_FAILURE);
-		}
 		
 		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
 			fprintf(stderr,"je t'aime pas nah\n");
@@ -216,8 +206,7 @@ int main(int argc, char **argv)
 		break;
 	default:
 		fprintf(stderr,"Commande inconnue\n");
-		fprintf(stderr,"usage: %s IP PORT COMMANDE HASH [IP]\n",argv[0]);
-		exit(EXIT_FAILURE);
+		usage(argv[0]);
 	}
 	
 	exit(EXIT_SUCCESS);
