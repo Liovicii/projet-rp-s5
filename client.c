@@ -90,8 +90,8 @@ int main(int argc, char **argv)
 		// on le port de la destination
 		//initv6(atoi(argv[2]),&dest);
 		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
-			fprintf(stderr,"je t'aime pas nah\n");
-			exit(EXIT_FAILURE);
+			fprintf(stderr,"Erreur: %s IP invalide\n", argv[1]);
+			usage(argv[0]);
 		}
 		dest.sin6_family=AF_INET6;
 		dest.sin6_port=htons(atoi(argv[2]));
