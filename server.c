@@ -94,6 +94,7 @@ static void * recv_server (void * infos){
  *
  * \param server Une structure contenant les données nécessaires
  */
+/*
 static void * keep_alive (void * server){
     // keep alive avec les server
     int i;
@@ -127,7 +128,7 @@ static void * keep_alive (void * server){
     return NULL;
 }
 
-
+*/
 
 
 /**
@@ -141,22 +142,35 @@ static void * keep_alive (void * server){
 int main(int argc, char * argv[]){
 
     // initialisations des variables
-    int port, sock, type_mess, end = 0, test;
-    int connexion = 0, nb_server = 0, sock_serv;
+    int port;
+	int type_mess;
+	int end = 0;
+	int test;
+    int connexion = 0, nb_server = 0;
+	//int sock_serv;
+
+	int sock[4];
+	struct sockaddr_in6 envoi_reception[4];
+	struct timeval waitTh;	
+	int max_sd;
+	fd_set read_sds;
+	int ret;
 
     socklen_t addrlen = sizeof(struct sockaddr_in6);
     struct sockaddr_in6 liste_server[MAX_SERVER];
-    struct sockaddr_in6 addr_server, addr_server_threads;
-    struct sockaddr_in6 addr_dest;
+    //struct sockaddr_in6 addr_server, addr_server_threads;
+    //struct sockaddr_in6 addr_dest;
     
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
-    char *hash = NULL, *ip_m = NULL, *get = NULL;
+    char *hash = NULL;
+	char *ip_m = NULL;
+	char *get = NULL;
   
     DHT * t = NULL; 
-    pthread_t recv_server_thread;
-    pthread_t send_server_thread;
-    pthread_t keep_alive_thread;
-    struct ka_data thread_arg;
+    //pthread_t recv_server_thread;
+    //pthread_t send_server_thread;
+    //pthread_t keep_alive_thread;
+   // struct ka_data thread_arg;
     
     memset(mess, '\0', MESS_MAX_SIZE);
     memset(buf, '\0', MESS_MAX_SIZE);
@@ -194,141 +208,212 @@ int main(int argc, char * argv[]){
 
 
     // convertir l'argument en adresse IPv6
-    if(convert_ipv6(argv[1], argv[2], &addr_server) == ERROR){
+    if(convert_ipv6(argv[1], argv[2], &envoi_reception[0]) == ERROR){
+        usage(argv[0]);
+    } 
+
+    if(convert_ipv6(argv[1], argv[2], &envoi_reception[1]) == ERROR){
+        usage(argv[0]);
+    } 
+
+    if(convert_ipv6(argv[1], argv[2], &envoi_reception[2]) == ERROR){
+        usage(argv[0]);
+    } 
+
+    if(convert_ipv6(argv[1], argv[2], &envoi_reception[3]) == ERROR){
         usage(argv[0]);
     } 
 
 
     // initialisation socket client
-    sock = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-
+    sock[0] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    sock[1] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    sock[2] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    sock[3] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
     // initialisation adresse IP du serveur
-    addr_server.sin6_family = AF_INET6;
-    addr_server.sin6_port = htons(port);
+	// Reception client    
+	envoi_reception[0].sin6_family = AF_INET6;
+    envoi_reception[0].sin6_port = htons(port);
+	//setip6(argv[1],&envoi_reception[3]);
 
+	// Envoi client
+    envoi_reception[1].sin6_family = AF_INET6;
+    envoi_reception[1].sin6_port = htons(7000);
+	//setip6(argv[1],&envoi_reception[3]);
+
+	// Reception serveur
+    envoi_reception[2].sin6_family = AF_INET6;
+    envoi_reception[2].sin6_port = htons(8000);
+	//setip6(argv[1],&envoi_reception[3]);
+
+	// Envoi serveur
+    envoi_reception[3].sin6_family = AF_INET6;
+    envoi_reception[3].sin6_port = htons(9000);
+	//setip6(argv[1],&envoi_reception[3]);
 
     // on attache l'adresse IP du serveur au socket
-    lier_socket6(sock, &addr_server);
+	// Lier socket reception client
+    lier_socket6(sock[0], &envoi_reception[0]);
+	
+	// Lier socket envoi client
+    lier_socket6(sock[1], &envoi_reception[1]);
 
+	// Lier socket reception serveur
+    lier_socket6(sock[2], &envoi_reception[2]);
+
+	// Lier socket envoi serveur	
+    lier_socket6(sock[3], &envoi_reception[3]);
 
     // on dit aux autres serveurs qu'on est là
        if(connexion == 1){
         // init socket serveur
-        sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-        lier_socket6(sock_serv, &addr_server);
+        //sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+        //lier_socket6(sock_serv, &addr_server);
 
         // lancement d'un thread qui s'occupe de la reception des serveurs
     }
 
 
+
+	if ( sock[0] > sock[2] ){
+		max_sd = (sock[0]+1);
+	}
+	if ( sock[2] > sock[0] ){
+		max_sd = ( sock[2]+1);
+	}
+
     // communications du serveur
-    while(end != 1){
+    //while(end != 1){
         
-        if(recvfrom(sock, buf, MESS_MAX_SIZE, 0,
-            (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
-            perror("recvfrom");
-            close(sock);
-            exit(EXIT_FAILURE);
-        }
+		while(end!=1){
+			waitTh.tv_sec 	= 5;
+			waitTh.tv_usec 	= 50;
+			FD_ZERO(&read_sds);
+			FD_SET(sock[0], &read_sds);
+			FD_SET(sock[2], &read_sds);
+			ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
+			if(ret < 0){
+				fprintf(stderr,"select a bugué\n");
+				exit(EXIT_FAILURE);
+			}
+			else if(FD_ISSET(sock[0],&read_sds)){
+				printf("On a recu un message du client\n");
+				if(recvfrom(sock[0], buf, MESS_MAX_SIZE, 0,
+            		(struct sockaddr *)&envoi_reception[0], &addrlen) == ERROR){
+				    perror("recvfrom");
+				    close(sock[0]);
+					close(sock[1]);
+					close(sock[2]);
+					close(sock[3]);
+				    exit(EXIT_FAILURE);
+				}
 
-        // analyse du message
-        type_mess = get_type_from_mess(buf);
-        hash = extraire_hash_mess(buf);
+				// analyse du message
+				type_mess = get_type_from_mess(buf);
+				hash = extraire_hash_mess(buf);
 
-        // on détermine ce qu'on doit faire
-        switch(type_mess){
-    
-            case PUT:
-                 ip_m = extraire_ip_mess(buf);
-                // message de type PUT
-                if((test = put_hash(hash, ip_m, &t)) == ERROR){
-                    fprintf(stderr, "put_hash failed\n");
-                }
-                // on doit envoyer le hash aux autres serveurs !
-                if(test != NTD){
-                    printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
-                    free(ip_m);
-                    free(hash);
-                }
-                break;
+				// on détermine ce qu'on doit faire
+				switch(type_mess){
+		
+				    case PUT:
+				         ip_m = extraire_ip_mess(buf);
+				        // message de type PUT
+				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
+				            fprintf(stderr, "put_hash failed\n");
+				        }
+				        // on doit envoyer le hash aux autres serveurs !
+				        if(test != NTD){
+				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
+				            free(ip_m);
+				            free(hash);
+				        }
+				        break;
 
-            case GET:
-                // message de type GET
-                get = get_hash(hash, t);
-                if(get == NULL){
-                    get = malloc(25);
-                    memcpy(get, "no IP match with request\0", 25);
-                }
-                printf("GET: %s\n", get);
-                // on doit envoyer un message au client
-                // creation du message
-                remplir_lg("", get, lg);
-                remplir_type(HAVE, type);
-                creation_chaine(type, lg, get, mess);
+				    case GET:
+				        // message de type GET
+				        get = get_hash(hash, t);
+				        if(get == NULL){
+				            get = malloc(25);
+				            memcpy(get, "no IP match with request\0", 25);
+				        }
+				        printf("GET: %s\n", get);
+				        // on doit envoyer un message au client
+				        // creation du message
+				        remplir_lg("", get, lg);
+				        remplir_type(HAVE, type);
+				        creation_chaine(type, lg, get, mess);
 
-                envoyer_mess6(sock, mess, addr_dest);
-                free(get);
-                free(hash);
-                break;
-          
-            case NEW:
-                // un nouveau serveur nous notifie
-                break;
+				        envoyer_mess6(sock[1], mess, envoi_reception[0]);
+				        free(get);
+				        free(hash);
+				        break;
+				  
+				    case NEW:
+				        // un nouveau serveur nous notifie
+				        break;
 
-            case DECO:
-                // un serveur se déconnecte
-                
-                break;
+				    case DECO:
+				        // un serveur se déconnecte
+				        
+				        break;
 
-            case HAVE:
-                // un serveur nous informe de ses modification
-                ip_m = extraire_ip_mess(buf);
-                printf("Reception d'une nouvelle entree\n");
-                if((test = put_hash(hash, ip_m, &t)) == ERROR){
-                    fprintf(stderr, "put_hash failed\n");
-                }
-                printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
-                free(ip_m);
-                free(hash);
-                break;
+				    case HAVE:
+				        // un serveur nous informe de ses modification
+				        ip_m = extraire_ip_mess(buf);
+				        printf("Reception d'une nouvelle entree\n");
+				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
+				            fprintf(stderr, "put_hash failed\n");
+				        }
+				        printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+				        free(ip_m);
+				        free(hash);
+				        break;
 
-            case EXIT:
-                // on demande au serveur de s'arreter
-                // on vérifie le code d'acces
-                printf("Demande d'arret\n");
-                if(check_access_code(hash) == 0){
-                    printf("mot de passe correct\n");
-                    // arret du keep alive
-                //    pthread_exit(&serveur__thread);
-                    end = 1;
-                }
-                else{
-                    printf("mot de passe incorrect\n");
-                    end = 0;
-                }
-                free(hash);
-                break;
+				    case EXIT:
+				        // on demande au serveur de s'arreter
+				        // on vérifie le code d'acces
+				        printf("Demande d'arret\n");
+				        if(check_access_code(hash) == 0){
+				            printf("mot de passe correct\n");
+				            // arret du keep alive
+				        //    pthread_exit(&serveur__thread);
+				            end = 1;
+				        }
+				        else{
+				            printf("mot de passe incorrect\n");
+				            end = 0;
+				        }
+				        free(hash);
+				        break;
 
-            default:
-                // type de message inconnu
-                fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
-                break;
-        } // fin switch
+				    default:
+				        // type de message inconnu
+				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
+				        break;
+				} // fin switch
    
-        // remise à zéro
-        memset(mess, '\0', MESS_MAX_SIZE);
-        memset(buf, '\0', MESS_MAX_SIZE);
+        		// remise à zéro
+        		memset(mess, '\0', MESS_MAX_SIZE);
+        		memset(buf, '\0', MESS_MAX_SIZE);
+			}
+			else if(FD_ISSET(sock[2],&read_sds)){
+				printf("On a recu un message du serveur\n");
+			}
+		}
 
-    } // fin boucle while (si end == 1) 
+	
+        
 
     printf("Arret du serveur %s\n", argv[1]);
    
     // il faut notifier les autres serveurs qu'on s'arrete
 
     // fermeture du socket
-    fermer_socket(sock);
-
+	fermer_socket(sock[0]);
+    fermer_socket(sock[1]);
+	fermer_socket(sock[2]);
+	fermer_socket(sock[3]);
     // suppression de la table
     supp_dht(t);
 
