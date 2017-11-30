@@ -272,12 +272,14 @@ int main(int argc, char * argv[]){
         //lier_socket6(sock_serv, &addr_server);
 		remplir_type(NEW,type);
 		//On envoie le message au serveur
-		envoyer_mess6(sock[3],type,envoi_reception[0]);
+		printf("On demande de se connecter\n");
+		envoyer_mess6(sock[2],type,liste_server[0]);
 		//On attends la reponse
 		memset(buf,'\0',MESS_MAX_SIZE);
-		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[0]);
+		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[2]);
 		extract_string(buf,type,0,LENGTH_TYPE);
 		type_mess = get_type_from_mess(buf);
+		printf("Valeure de peut se connecter %d\n",type_mess);
 		if(type_mess == NO){
 			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
 				exit(EXIT_FAILURE);	
@@ -345,7 +347,8 @@ int main(int argc, char * argv[]){
 				        remplir_type(HAVE, type);
 				        memcpy(buf,type,1);
 						for( i=0; i<nb_server; i++){
-							envoyer_mess6(sock[3], mess, liste_server[i]);
+							printf("On envoie: '%s' au serveur %d\n",buf,i);
+							envoyer_mess6(sock[3], buf, liste_server[i]);
 						}
 				        break;
 				    case GET:
@@ -382,7 +385,20 @@ int main(int argc, char * argv[]){
 				        }
 				        free(hash);
 				        break;
-
+				    case NEW:
+				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
+				        if(nb_server>9){
+				        	remplir_type(NO,type);
+				        	envoyer_mess6(sock[3], mess, envoi_reception[0]);
+				        }
+				        else{
+				        	liste_server[nb_server]=envoi_reception[0];
+				        	nb_server++;
+				        	printf("Nb de serveur connus %d\n",nb_server);
+				        	remplir_type(YES,type);
+				        	envoyer_mess6(sock[3],type,envoi_reception[0]);			        
+				        }
+				        break;
 				    default:
 				        // type de message inconnu
 				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
@@ -395,7 +411,7 @@ int main(int argc, char * argv[]){
 			}
 			else if(FD_ISSET(sock[2],&read_sds)){
 				printf("On a recu un message du serveur\n");
-				if(recvfrom(sock[0], buf, MESS_MAX_SIZE, 0,
+				if(recvfrom(sock[2], buf, MESS_MAX_SIZE, 0,
             		(struct sockaddr *)&envoi_reception[0], &addrlen) == ERROR){
 				    perror("recvfrom");
 				    close(sock[0]);
@@ -404,14 +420,16 @@ int main(int argc, char * argv[]){
 					close(sock[3]);
 				    exit(EXIT_FAILURE);
 				}
-
+				printf("On recupere le type du message\n");
 				// analyse du message
 				type_mess = get_type_from_mess(buf);
-
+				hash = extraire_hash_mess(buf);
+				printf("Type de message %d HAVE=%d\n",type_mess,HAVE);
 				// on détermine ce qu'on doit faire
 				switch(type_mess){
 		
 				    case HAVE:
+				    	printf("On regarde si on possede le hash");
 				         ip_m = extraire_ip_mess(buf);
 				        // message de type PUT
 				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
@@ -426,6 +444,7 @@ int main(int argc, char * argv[]){
 				        break;
 				  
 				    case NEW:
+				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
 				        	remplir_type(NO,type);
 				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
@@ -464,11 +483,15 @@ int main(int argc, char * argv[]){
 				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
 				        break;
 				} // fin switch
-   
+   			
         		// remise à zéro
         		memset(mess, '\0', MESS_MAX_SIZE);
         		memset(buf, '\0', MESS_MAX_SIZE);
 			}
+			else{
+				printf("timeout ona rien recu\n");
+			}
+			
 		}
 
 	

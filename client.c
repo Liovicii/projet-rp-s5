@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 		my_addr.sin6_addr = in6addr_any;
 		my_addr.sin6_flowinfo=1;
 		my_addr.sin6_scope_id = 0;		
-		my_addr.sin6_port = htons(7000);	
+		my_addr.sin6_port = htons(5432);	
 
 		lier_socket6(sockfd,&my_addr);
 
