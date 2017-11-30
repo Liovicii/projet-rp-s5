@@ -267,10 +267,21 @@ int main(int argc, char * argv[]){
 
     // on dit aux autres serveurs qu'on est là
        if(connexion == 1){
-        // init socket serveur
+        //init socket serveur
         //sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         //lier_socket6(sock_serv, &addr_server);
-
+		remplir_type(NEW,type);
+		//On envoie le message au serveur
+		envoyer_mess6(sock[3],type,envoi_reception[0]);
+		//On attends la reponse
+		memset(buf,'\0',MESS_MAX_SIZE);
+		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[0]);
+		extract_string(buf,type,0,LENGTH_TYPE);
+		type_mess = get_type_from_mess(buf);
+		if(type_mess == NO){
+			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
+				exit(EXIT_FAILURE);	
+		}
         // lancement d'un thread qui s'occupe de la reception des serveurs
     }
 
@@ -328,10 +339,15 @@ int main(int argc, char * argv[]){
 				            free(ip_m);
 				            free(hash);
 				        }
-
+					
 						// Envoyer have a tous les serveur
-				        //break;
-
+						int i;
+				        remplir_type(HAVE, type);
+				        memcpy(buf,type,1);
+						for( i=0; i<nb_server; i++){
+							envoyer_mess6(sock[3], mess, liste_server[i]);
+						}
+				        break;
 				    case GET:
 				        // message de type GET
 				        get = get_hash(hash, t);
@@ -350,28 +366,6 @@ int main(int argc, char * argv[]){
 				        free(get);
 				        free(hash);
 				        break;
-				  
-				    case NEW:
-				        // un nouveau serveur nous notifie
-				        break;
-
-				    case DECO:
-				        // un serveur se déconnecte
-						// On envoie a tous les serveurs qu'on se deconnecte				        
-				        break;
-
-				    case HAVE:
-				        // un serveur nous informe de ses modification
-				        ip_m = extraire_ip_mess(buf);
-				        printf("Reception d'une nouvelle entree\n");
-				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
-				            fprintf(stderr, "put_hash failed\n");
-				        }
-				        printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
-				        free(ip_m);
-				        free(hash);
-				        break;
-
 				    case EXIT:
 				        // on demande au serveur de s'arreter
 				        // on vérifie le code d'acces
@@ -432,26 +426,22 @@ int main(int argc, char * argv[]){
 				        break;
 				  
 				    case NEW:
-				        // un nouveau serveur nous notifie
+				        if(nb_server>9){
+				        	remplir_type(NO,type);
+				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
+				        }
+				        else{
+				        	liste_server[nb_server]=envoi_reception[2];
+				        	nb_server++;
+				        	remplir_type(YES,type);
+				        	envoyer_mess6(sock[3],type,envoi_reception[2]);			        
+				        }
 				        break;
 
 				    case DECO:
 				        // un serveur se déconnecte
 										        
 				        break;
-
-				    case HAVE:
-				        // un serveur nous informe de ses modification
-				        ip_m = extraire_ip_mess(buf);
-				        printf("Reception d'une nouvelle entree\n");
-				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
-				            fprintf(stderr, "put_hash failed\n");
-				        }
-				        printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
-				        free(ip_m);
-				        free(hash);
-				        break;
-
 				    case EXIT:
 				        // on demande au serveur de s'arreter
 				        // on vérifie le code d'acces

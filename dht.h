@@ -25,7 +25,7 @@
 #define PASS            "password123" // mot de passe serveur 
 
 /* Définition des types pour les messages */
-enum {GET, PUT, WANT, HAVE, EXIT, NEW, DECO, KEEP_ALIVE};
+enum {GET, PUT, WANT, HAVE, EXIT, NEW, DECO, KEEP_ALIVE, YES, NO};
 
 /**
  * \def PERRORMSG(cmd, msg)
