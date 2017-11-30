@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 				break;
 			case 6:
 				if ( (strcmp("put",argv[3])==0)){
-					option_lue=GET;
+					option_lue=PUT;
 					//On regarde si le hash est valide
 					if(check_hash(argv[4])==-1){
 						fprintf(stderr,"Erreur: le hash n'est pas assez long\n");
@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 		}
 	
 	// verification du port
-	if(port_valide(argv[3])	== ERROR){
-		fprintf(stderr, "Erreur: %d port invalide", atoi(argv[3]));
+	if(port_valide(argv[2])	== ERROR){
+		fprintf(stderr, "Erreur: %d port invalide", atoi(argv[2]));
 		usage(argv[0]);
 	}
 	
