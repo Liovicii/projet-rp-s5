@@ -328,7 +328,9 @@ int main(int argc, char * argv[]){
 				            free(ip_m);
 				            free(hash);
 				        }
-				        break;
+
+						// Envoyer have a tous les serveur
+				        //break;
 
 				    case GET:
 				        // message de type GET
@@ -355,7 +357,7 @@ int main(int argc, char * argv[]){
 
 				    case DECO:
 				        // un serveur se déconnecte
-				        
+						// On envoie a tous les serveurs qu'on se deconnecte				        
 				        break;
 
 				    case HAVE:
@@ -399,6 +401,83 @@ int main(int argc, char * argv[]){
 			}
 			else if(FD_ISSET(sock[2],&read_sds)){
 				printf("On a recu un message du serveur\n");
+				if(recvfrom(sock[0], buf, MESS_MAX_SIZE, 0,
+            		(struct sockaddr *)&envoi_reception[0], &addrlen) == ERROR){
+				    perror("recvfrom");
+				    close(sock[0]);
+					close(sock[1]);
+					close(sock[2]);
+					close(sock[3]);
+				    exit(EXIT_FAILURE);
+				}
+
+				// analyse du message
+				type_mess = get_type_from_mess(buf);
+
+				// on détermine ce qu'on doit faire
+				switch(type_mess){
+		
+				    case HAVE:
+				         ip_m = extraire_ip_mess(buf);
+				        // message de type PUT
+				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
+				            fprintf(stderr, "put_hash failed\n");
+				        }
+				        // on doit envoyer le hash aux autres serveurs !
+				        if(test != NTD){
+				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
+				            free(ip_m);
+				            free(hash);
+				        }
+				        break;
+				  
+				    case NEW:
+				        // un nouveau serveur nous notifie
+				        break;
+
+				    case DECO:
+				        // un serveur se déconnecte
+										        
+				        break;
+
+				    case HAVE:
+				        // un serveur nous informe de ses modification
+				        ip_m = extraire_ip_mess(buf);
+				        printf("Reception d'une nouvelle entree\n");
+				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
+				            fprintf(stderr, "put_hash failed\n");
+				        }
+				        printf("New Entry in table: IP %s has hash %s\n", ip_m, hash);
+				        free(ip_m);
+				        free(hash);
+				        break;
+
+				    case EXIT:
+				        // on demande au serveur de s'arreter
+				        // on vérifie le code d'acces
+				        printf("Demande d'arret\n");
+				        if(check_access_code(hash) == 0){
+				            printf("mot de passe correct\n");
+				            // arret du keep alive
+				        //    pthread_exit(&serveur__thread);
+				            end = 1;
+				        }
+				        else{
+				            printf("mot de passe incorrect\n");
+				            end = 0;
+				        }
+				        free(hash);
+				        break;
+
+				    default:
+				        // type de message inconnu
+				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
+				        break;
+				} // fin switch
+   
+        		// remise à zéro
+        		memset(mess, '\0', MESS_MAX_SIZE);
+        		memset(buf, '\0', MESS_MAX_SIZE);
 			}
 		}
 
