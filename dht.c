@@ -85,36 +85,6 @@ int check_access_code(char * code){
 }
 
 
-/***** LISTE DES SERVER *****/
-
-
-void add_server(struct sockaddr_in6 * liste, char * ip, char * port, int * nb){
-    if(*nb == MAX_SERVER - 1){    
-        fprintf(stderr, "La liste des serveurs est remplie\n");
-        fprintf(stderr, "server %s pas ajoute\n", ip);
-        return;
-    }
-    if(port_valide(port) == ERROR){
-        fprintf(stderr, "Erreur: port du server à ajouter invalide\n");
-        fprintf(stderr, "serveur %s pas ajoute\n", ip);
-        return;
-    }
-    struct sockaddr_in6 new;
-    new.sin6_family = AF_INET6;
-    new.sin6_port = htons(atoi(port));
-    convert_ipv6(ip, port, &new);
-    liste[*nb] = new;
-    *nb = *nb+1;
-}
-
-
-void supp_server(struct sockaddr_in6 * liste, int i, int * nb){
-    int j; 
-    for(j = i; j < *nb-1; j++){
-        liste[j] = liste[j+1];
-    }
-    *nb = *nb-1;
-}
 
 
 /***** TABLE DHT *****/
@@ -645,3 +615,97 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
     else old->next = tmp_ip->next;
     free(tmp_ip); 
 }
+
+/***** LISTE DES SERVER *****/
+
+
+void add_server(struct sockaddr_in6 * liste, char * ip, char * port, int * nb){
+    if(*nb == MAX_SERVER - 1){    
+        fprintf(stderr, "La liste des serveurs est remplie\n");
+        fprintf(stderr, "server %s pas ajoute\n", ip);
+        return;
+    }
+    if(port_valide(port) == ERROR){
+        fprintf(stderr, "Erreur: port du server à ajouter invalide\n");
+        fprintf(stderr, "serveur %s pas ajoute\n", ip);
+        return;
+    }
+    struct sockaddr_in6 new;
+    new.sin6_family = AF_INET6;
+    new.sin6_port = htons(atoi(port));
+    convert_ipv6(ip, port, &new);
+    liste[*nb] = new;
+    *nb = *nb+1;
+}
+
+
+void supp_server(struct sockaddr_in6 * liste, int i, int * nb){
+    int j; 
+    for(j = i; j < *nb-1; j++){
+        liste[j] = liste[j+1];
+    }
+    *nb = *nb-1;
+}
+
+/***** MESAGES SERVEURS ****/
+void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table){ 
+    char mess[MESS_MAX_SIZE], lg[3], type[2];
+    char ip_hash[MESS_MAX_SIZE-3];
+    memset(mess,'\0',MESS_MAX_SIZE);
+    memset(ip_hash,'\0',MESS_MAX_SIZE-3);
+    memset(lg,'\0',3);
+    memset(type,'\0',2);
+   
+    char *ip_m = NULL;
+    char *hash = NULL;
+    DHT * tmp_dht=table;
+    IP * tmp_ip;
+    //On rempli le type du message
+    remplir_type(HAVE,type);
+    
+    while(tmp_dht != NULL){
+        // affectation de la valeure du hash
+        hash=tmp_dht->val;
+        
+        // envoi have
+        tmp_ip = tmp_dht->have;
+        while(tmp_ip != NULL){
+            ip_m=tmp_ip->val;
+            //On concaten l'ip et le hash
+            concatener_ip_hash(ip_m,hash,ip_hash);
+            //On rempli la longueur
+            remplir_lg(ip_m,hash,lg);
+            //On creer la chaine
+            creation_chaine(type,lg,ip_hash,mess);
+            //On envoie le message
+            envoyer_mess6(sockfd,mess,*recepteur);
+            printf("Message envoyé: %s\n",mess);
+            //On se deplace
+            free(ip_m);
+            tmp_ip = tmp_ip->next;
+        }
+        
+        free(hash);
+        // on passe au hash suivant
+        tmp_dht = tmp_dht->next;
+        printf("\n");
+    }  
+    return;
+}
+/*
+void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste){
+    return;
+}
+
+
+void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * serveurs, struct sockaddr_in6 * liste){
+    return;   
+}
+
+void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs){
+    
+    
+    
+    return;
+}
+*/

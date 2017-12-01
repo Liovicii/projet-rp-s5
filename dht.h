@@ -159,6 +159,7 @@ void add_server(struct sockaddr_in6*liste,char*ip,char*port,int*nb);
 
 
 
+
 /* * *  TABLE DES HASHS * * */
 
 
@@ -241,6 +242,49 @@ void delete_hash(char * hash, DHT ** table);
  * \param liste la liste dans laquelle se trouve l'IP (WANT ou HAVE)
  */
 void delete_ip(char * hash, char * ip, DHT * table, int liste);
+
+/* * *  MESSAGES ENVOYES AU SERVEURS * * */
+
+/*
+ * \fn void void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table)
+ * \brief Envoie la table de hash au serveur 
+ * 
+ * \param sockfd, socket a partir duquel on va envoyer le message
+ * \param recepteur serveur a qui on va envoyer le message
+ * table table de hash
+ */
+void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table);
+
+/*
+ * \fn void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste)
+ * \brief On supprimer un serveur de la liste de serveurs 
+ * 
+ * \param indice, indice du serveur qu'on doit supprimer de la liste
+ * \param serveur liste de socket des serveurs
+ * table liste liste des ip et des ports de destination des serveurs
+ */
+void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste);
+
+/*
+ * \fn void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * serveurs, struct sockaddr_in6 * liste)
+ * \brief On insere un serveur dans la liste de serveurs
+ * 
+ * \param nb_serveur nombre de serveurs dans la liste
+ * \param recepteur serveur que l'on va inserer
+ * \param serveurs liste de socket associes au serveurs
+ * \param liste liste de sockaddr_in6 des serveurs
+ */
+void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * serveurs, struct sockaddr_in6 * liste);
+
+/*
+ * \fn void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs)
+ * \brief On fait un keep alive des serveurs
+ * 
+ * \param nb_serveur nombre de serveurs dans la liste
+ * \param liste de sockaddr_in6 des serveurs
+ * \param serveurs liste de socket associes au serveurs
+ */
+void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs);
 
 
 #endif
