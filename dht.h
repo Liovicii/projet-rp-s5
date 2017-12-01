@@ -25,7 +25,7 @@
 #define PASS            "password123" // mot de passe serveur 
 
 /* Définition des types pour les messages */
-enum {GET, PUT, WANT, HAVE, EXIT, NEW, DECO, KEEP_ALIVE, YES, NO};
+enum {GET, PUT, WANT, HAVE, EXIT, NEW, DECO, KEEP_ALIVE, YES, NEW_SERV};
 
 /**
  * \def PERRORMSG(cmd, msg)
@@ -286,5 +286,24 @@ void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * se
  */
 void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs);
 
+/*
+ * \fn void send_server_list(int sockfd,struct sockaddr_in6 * recepteur, int * nb_serv, struct sockaddr_in6 * liste)
+ * \brief Envoi de la liste des serveurs
+ * \param sockfd socket d'envoi du message
+ * \param liste de sockaddr_in6 des serveurs
+ * \param nb_serv nombre de serveurs a partage
+ */
+void send_server_list(int sockfd,struct sockaddr_in6 * liste, int * nb_serv);
 
+/*
+ * \fn void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struct sockaddr_in6 * new_server)
+ * \brief Envoi du nouveau serveur a tous les autres serveurs
+ * \param sockfd socket d'envoi du message
+ * \param recepteur serveur qui va recevoir la liste
+ * \param nb_serv nombre de serveurs a partage
+ * \param liste de sockaddr_in6 des serveurs
+ */
+void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struct sockaddr_in6 * new_server);
+
+void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste);
 #endif

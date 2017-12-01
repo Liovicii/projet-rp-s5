@@ -692,6 +692,66 @@ void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table){
     }  
     return;
 }
+
+void send_server_list(int sockfd,struct sockaddr_in6 * liste, int * nb_serv){
+    char ip_serv[INET6_ADDRSTRLEN];
+    char ip_dest[INET6_ADDRSTRLEN];
+    int i;
+    char type[2];
+    char lg[3];
+    char mess[MESS_MAX_SIZE];
+    memset(mess,'\0',MESS_MAX_SIZE);
+    memset(ip_serv,'\0',INET6_ADDRSTRLEN);
+    memset(ip_dest,'\0',INET6_ADDRSTRLEN);
+    memset(lg,'\0',3);
+    memset(type,'\0',2);
+    remplir_type(NEW_SERV,type);
+    for(i=0;i<*nb_serv;i++){
+        if (inet_ntop(AF_INET6,&liste[i].sin6_addr,ip_serv,INET6_ADDRSTRLEN)==NULL){
+            perror("inet_ntop\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("ip du serveur %d = %s\n",i,ip_serv);
+        remplir_lg(ip_serv,"",lg);
+        creation_chaine(type,lg,ip_serv,mess);
+        
+        int j;
+        for(j=0;j<*nb_serv;j++){
+            
+            if (inet_ntop(AF_INET6,&liste[j].sin6_addr,ip_dest,INET6_ADDRSTRLEN)==NULL){
+                perror("inet_ntop\n");
+                exit(EXIT_FAILURE);
+            }
+            printf("ip du serveur %d = %s\n",j,ip_dest);
+            if(strcmp(ip_dest,ip_serv)!=0){
+                printf("On envoie l'ip du serveur %s au serveur %s\n",ip_serv,ip_dest);
+                printf("On envoie mess: %s\n",mess);
+                envoyer_mess6(sockfd,mess,liste[j]);
+            }
+        }
+        memset(mess,'\0',MESS_MAX_SIZE);
+    }
+   return;    
+}
+
+
+void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste){
+    int i;
+    char ip_serv[INET6_ADDRSTRLEN];
+    memset(ip_serv,'\0',INET6_ADDRSTRLEN);
+    for (i=0;i<*nb_serv;i++){
+        if (inet_ntop(AF_INET6,&liste[i].sin6_addr,ip_serv,INET6_ADDRSTRLEN)==NULL){
+            perror("inet_ntop\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("Ip %d: %s\n",i,ip_serv);
+        memset(ip_serv,'\0',INET6_ADDRSTRLEN);
+    }
+    return;
+}
+/*
+void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struct sockaddr_in6 * new_server);
+*/
 /*
 void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste){
     return;

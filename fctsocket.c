@@ -127,6 +127,7 @@ void remplir_lg(char * ip, char * hash, char * lg){
 void remplir_type(int val_type, char * type){
     snprintf(type,2,"%d",val_type);
     type[1]=('\0');
+    printf("Conversion type a l'arache %c %d\n",type[0],((int)type[0]-'0'));
     return;
 }
 
@@ -156,7 +157,7 @@ int get_length_hash(char * lg){
 int get_type_from_mess(char * mes){
     char type_m[LENGTH_TYPE+1];
     extract_string(mes,type_m,0,LENGTH_TYPE);
-    return atoi(type_m);
+    return atoi(&type_m[0]);
 }
 
 void extraire_taille_mess(char * lg_m,char *mes){

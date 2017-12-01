@@ -281,10 +281,11 @@ int main(int argc, char * argv[]){
 		extract_string(buf,type,0,LENGTH_TYPE);
 		type_mess = get_type_from_mess(buf);
 		printf("Valeure de peut se connecter %d\n",type_mess);
-		if(type_mess == NO){
+		if(type_mess == ERROR){
 			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
 				exit(EXIT_FAILURE);	
 		}
+		send_server_list(sock[3],liste_server,&nb_server);
         // lancement d'un thread qui s'occupe de la reception des serveurs
     }
 
@@ -470,7 +471,7 @@ int main(int argc, char * argv[]){
 				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
                             printf("Il n'y a plus de place dans la liste de serveur\n");
-				        	remplir_type(NO,type);
+				        	remplir_type(ERROR,type);
 				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
 				        }
 				        else{
@@ -529,7 +530,7 @@ int main(int argc, char * argv[]){
 				    case NEW:
 				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
-				        	remplir_type(NO,type);
+				        	remplir_type(ERROR,type);
                             printf("On a plus de place\n");
 				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
 				        }
@@ -542,9 +543,25 @@ int main(int argc, char * argv[]){
                             //liste_server[nb_server].sin6_port=htons(8000);
 				        	envoyer_mess6(sock[3],type,liste_server[nb_server]);
                             nb_server++;
+                            printf("On envoie la liste de serveur\n");
+                            send_server_list(sock[3],liste_server,&nb_server);
 				        }
 				        break;
-
+                    case NEW_SERV:
+                            printf("On recoit une ip de serveur a ajouter: %s\n",buf);
+                            printf("On possede les ip la avant insertion\n");
+                            print_sip_list(&nb_server,liste_server);
+                            ip_m = extraire_ip_mess(buf);
+                            //Peut etre faire une verif ici
+                            if(convert_ipv6(ip_m, "8000", &liste_server[nb_server]) == ERROR){
+                                usage(argv[0]);
+                            } 
+                        	liste_server[nb_server].sin6_family=AF_INET6;
+                            liste_server[nb_server].sin6_port=htons(8000);
+				        	nb_server++;
+                            printf("On possede les ip la apres insertion\n");
+                            print_sip_list(&nb_server,liste_server);
+                        break;
 				    case DECO:
 				        // un serveur se déconnecte
 										        
