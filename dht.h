@@ -260,10 +260,11 @@ void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table);
  * \brief On supprimer un serveur de la liste de serveurs 
  * 
  * \param indice, indice du serveur qu'on doit supprimer de la liste
+ * \param nb_serveur nombre de serveurs connus
  * \param serveur liste de socket des serveurs
  * table liste liste des ip et des ports de destination des serveurs
  */
-void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste);
+void supprimer_serveur(int indice, int * nb_seveur, struct sockaddr_in6 * liste);
 
 /*
  * \fn void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * serveurs, struct sockaddr_in6 * liste)
@@ -284,7 +285,7 @@ void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * se
  * \param liste de sockaddr_in6 des serveurs
  * \param serveurs liste de socket associes au serveurs
  */
-void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs);
+void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs);
 
 /*
  * \fn void send_server_list(int sockfd,struct sockaddr_in6 * recepteur, int * nb_serv, struct sockaddr_in6 * liste)

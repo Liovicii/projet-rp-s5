@@ -752,20 +752,76 @@ void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste){
 /*
 void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struct sockaddr_in6 * new_server);
 */
-/*
-void supprimer_serveur(int indice, int * serveurs, struct sockaddr_in6 * liste){
-    return;
+
+void supprimer_serveur(int indice, int * nb_serveur, struct sockaddr_in6 * liste){
+	int i;
+	for (i=indice; i<(*nb_serveur)-1; i++){
+		//serveurs[i]=serveurs[i+1];
+		liste[i]=liste[i+1];
+	}
+	//serveurs[i]=0;
+	*nb_serveur=(i-1);
+	printf("Apres suppressin il reste %d\n",*nb_serveur);
+	return;
 }
 
-
+/*
 void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * serveurs, struct sockaddr_in6 * liste){
     return;   
 }
-
-void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int * serveurs){
-    
-    
-    
+*/
+void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs){
+    int i;
+    char type[2];
+    socklen_t addrlen = sizeof(struct sockaddr_in6);
+    struct sockaddr_in6 reception;
+    //char lg[3];
+    char mess[MESS_MAX_SIZE];
+    memset(mess,'\0',MESS_MAX_SIZE);
+    //memset(lg,'\0',3);
+    memset(type,'\0',2);
+    remplir_type(KEEP_ALIVE,type);
+    //remplir_lg("","",lg);
+   // time_t tps;
+   	fd_set read_sds;
+   	struct timeval waitTh;	
+	int ret;
+	printf("Debut boucle keep alive\n");
+    for(i=0; i<*nb_serveur; i++){
+    	printf("J'envoie vers %d\n",liste[i].sin6_port);
+    	envoyer_mess6(serveurs,type,liste[i]);
+    	waitTh.tv_sec 	= 5;
+		waitTh.tv_usec 	= 0;
+		FD_ZERO(&read_sds);
+		FD_SET(serveurs, &read_sds);
+		ret= select(serveurs,&read_sds,NULL, NULL, &waitTh);
+					if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
+            		(struct sockaddr *)&reception, &addrlen) == ERROR){
+				    perror("recvfrom");
+				    exit(EXIT_FAILURE);
+				}
+		printf("%s\n",mess);
+		if(ret < 0){
+			fprintf(stderr,"select a bugué\n");
+			exit(EXIT_FAILURE);
+		}
+		else if(FD_ISSET(serveurs,&read_sds)){
+			// on recoit le message
+			printf("J'ai recu une reponse\n");
+			if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
+            		(struct sockaddr *)&reception, &addrlen) == ERROR){
+				    perror("recvfrom");
+				    exit(EXIT_FAILURE);
+				}
+			//rien 			
+		}
+		else{
+			printf("Delai depassé\n");
+			printf("On supprime le serveur %d\n",i);
+			//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
+			supprimer_serveur(i,nb_serveur,liste);
+    	}
+    }
     return;
 }
-*/
+
