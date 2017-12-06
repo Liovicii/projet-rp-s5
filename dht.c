@@ -371,7 +371,7 @@ int insert_ip(DHT * hash, char * ip, int liste){
         }*/
         // on parcours la liste
         while((tmp_ip != NULL)){
-            if(strncmp(tmp_ip->val, ip, strlen(ip)) == 0){
+            if(strncmp(ip, tmp_ip->val, strlen(ip)) == 0){
                 printf("\tIP %s already in list\n", ip);
                 return NTD;
             }
@@ -756,11 +756,10 @@ void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struc
 void supprimer_serveur(int indice, int * nb_serveur, struct sockaddr_in6 * liste){
 	int i;
 	for (i=indice; i<(*nb_serveur)-1; i++){
-		//serveurs[i]=serveurs[i+1];
 		liste[i]=liste[i+1];
 	}
-	//serveurs[i]=0;
-	*nb_serveur=(i-1);
+
+	*nb_serveur-=1;
 	printf("Apres suppressin il reste %d\n",*nb_serveur);
 	return;
 }
@@ -794,13 +793,7 @@ void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs){
 		waitTh.tv_usec 	= 0;
 		FD_ZERO(&read_sds);
 		FD_SET(serveurs, &read_sds);
-		ret= select(serveurs,&read_sds,NULL, NULL, &waitTh);
-					if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
-            		(struct sockaddr *)&reception, &addrlen) == ERROR){
-				    perror("recvfrom");
-				    exit(EXIT_FAILURE);
-				}
-		printf("%s\n",mess);
+		ret= select(serveurs+1,&read_sds,NULL, NULL, &waitTh);
 		if(ret < 0){
 			fprintf(stderr,"select a bugué\n");
 			exit(EXIT_FAILURE);
@@ -812,12 +805,12 @@ void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs){
             		(struct sockaddr *)&reception, &addrlen) == ERROR){
 				    perror("recvfrom");
 				    exit(EXIT_FAILURE);
-				}
+			}
 			//rien 			
 		}
 		else{
 			printf("Delai depassé\n");
-			printf("On supprime le serveur %d\n",i);
+			printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
 			//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
 			supprimer_serveur(i,nb_serveur,liste);
     	}

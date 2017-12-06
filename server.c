@@ -344,6 +344,7 @@ int main(int argc, char * argv[]){
 				switch(type_mess){
 		
 				    case PUT:
+				    		printf("Message recu :\n %s\n",buf);
 				         ip_m = extraire_ip_mess(buf);
 				        // message de type PUT
 				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
@@ -520,14 +521,7 @@ int main(int argc, char * argv[]){
 				        free(hash);
 				        break;
 					case KEEP_ALIVE:
-						sleep(2);
 						printf("je recoit un keep alive de %d\n",envoi_reception[2].sin6_port);
-													char adr_ip[INET_ADDRSTRLEN];
-	if(inet_ntop(AF_INET6,&envoi_reception[2].sin6_addr,adr_ip,INET6_ADDRSTRLEN)==NULL){
-		perror("inet_ntop\n");
-		exit(EXIT_FAILURE);		
-	}
-	printf("Ip source: %s\n",adr_ip);
                			remplir_type(YES,type);
                			//envoyer_mess6(sock[3],type,envoi_reception[2]);
                			sendto(sock_alive,type,2,0,(struct sockaddr *)&envoi_reception[2],addrlen);
