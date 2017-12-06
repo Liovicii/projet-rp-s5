@@ -151,6 +151,9 @@ int main(int argc, char * argv[]){
     //int sock_serv[10];
 	int sock[4];
 	struct sockaddr_in6 envoi_reception[4];
+	// Pour le keep alive
+	struct sockaddr_in6 alive;
+	int sock_alive;
 	struct timeval waitTh;	
 	int max_sd;
 	fd_set read_sds;
@@ -224,14 +227,19 @@ int main(int argc, char * argv[]){
         usage(argv[0]);
     } 
 
-
+    if(convert_ipv6(argv[1], argv[2], &alive) == ERROR){
+        usage(argv[0]);
+    } 
     // initialisation socket client
     sock[0] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     sock[1] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     sock[2] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     sock[3] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-
+	sock_alive = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     // initialisation adresse IP du serveur
+ 	alive.sin6_family = AF_INET6;
+    alive.sin6_port = htons(7667);   
+    
 	// Reception client    
 	envoi_reception[0].sin6_family = AF_INET6;
     envoi_reception[0].sin6_port = htons(port);
@@ -253,6 +261,7 @@ int main(int argc, char * argv[]){
 	//setip6(argv[1],&envoi_reception[3]);
 
     // on attache l'adresse IP du serveur au socket
+    lier_socket6(sock_alive, &alive);
 	// Lier socket reception client
     lier_socket6(sock[0], &envoi_reception[0]);
 	
@@ -297,6 +306,8 @@ int main(int argc, char * argv[]){
 	if ( sock[2] > sock[0] ){
 		max_sd = ( sock[2]+1);
 	}
+	if( sock_alive>max_sd)
+		max_sd=sock_alive;
 
     // communications du serveur
     //while(end != 1){
@@ -307,86 +318,9 @@ int main(int argc, char * argv[]){
 			FD_ZERO(&read_sds);
 			FD_SET(sock[0], &read_sds);
 			FD_SET(sock[2], &read_sds);
+			FD_SET(sock_alive, &read_sds);
 			ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
-            /* int i
-             * for (i=0; i<nb_server;i++){
-             *    if (FD_ISSET(sock_serv[i],&read_sds)){
-             * 				printf("On a recu un message du serveur\n");
-				if(recvfrom(sock[i], buf, MESS_MAX_SIZE, 0,
-            		(struct sockaddr *)&envoi_reception[0], &addrlen) == ERROR){
-				    perror("recvfrom");
-				    close(sock[0]);
-					close(sock[1]);
-					close(sock[2]);
-					close(sock[3]);
-				    exit(EXIT_FAILURE);
-				}
-				printf("On recupere le type du message\n");
-				// analyse du message
-				type_mess = get_type_from_mess(buf);
-				hash = extraire_hash_mess(buf);
-				printf("Type de message %d HAVE=%d\n",type_mess,HAVE);
-				// on détermine ce qu'on doit faire
-				switch(type_mess){
-		
-				    case HAVE:
-				    	printf("On regarde si on possede le hash");
-				         ip_m = extraire_ip_mess(buf);
-				        // message de type PUT
-				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
-				            fprintf(stderr, "put_hash failed\n");
-				        }
-				        // on doit envoyer le hash aux autres serveurs !
-				        if(test != NTD){
-				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
-				            free(ip_m);
-				            free(hash);
-				        }
-				        break;
-				  
-				    case NEW:
-				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
-				        if(nb_server>9){
-				        	remplir_type(NO,type);
-				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
-				        }
-				        else{
-				        	liste_server[nb_server]=envoi_reception[2];
-				        	nb_server++;
-				        	remplir_type(YES,type);
-				        	envoyer_mess6(sock[3],type,envoi_reception[2]);			        
-				        }
-				        break;
-
-				    case DECO:
-				        // un serveur se déconnecte
-										        
-				        break;
-				    case EXIT:
-				        // on demande au serveur de s'arreter
-				        // on vérifie le code d'acces
-				        printf("Demande d'arret\n");
-				        if(check_access_code(hash) == 0){
-				            printf("mot de passe correct\n");
-				            // arret du keep alive
-				        //    pthread_exit(&serveur__thread);
-				            end = 1;
-				        }
-				        else{
-				            printf("mot de passe incorrect\n");
-				            end = 0;
-				        }
-				        free(hash);
-				        break;
-
-				    default:
-				        // type de message inconnu
-				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
-				        break;
-				} // fin switch
-                }*/
-                    
-			if(ret < 0){
+            if(ret < 0){
 				fprintf(stderr,"select a bugué\n");
 				exit(EXIT_FAILURE);
 			}
@@ -420,8 +354,11 @@ int main(int argc, char * argv[]){
 				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
 				            						// Envoyer have a tous les serveur
                             int i;
+                            printf("Port de alive: %d\n",alive.sin6_port);
+                            keep_alive(&nb_server,liste_server,sock_alive);
                             remplir_type(HAVE, type);
                             memcpy(buf,type,1);
+                            printf("Serveur restants apres keep alive %d\n",nb_server);
                             for( i=0; i<nb_server; i++){
                                 printf("On envoie: '%s' au serveur %d\n",buf,i);
                                 envoyer_mess6(sock[3], buf, liste_server[i]);
@@ -582,7 +519,20 @@ int main(int argc, char * argv[]){
 				        }
 				        free(hash);
 				        break;
-
+					case KEEP_ALIVE:
+						sleep(2);
+						printf("je recoit un keep alive de %d\n",envoi_reception[2].sin6_port);
+													char adr_ip[INET_ADDRSTRLEN];
+	if(inet_ntop(AF_INET6,&envoi_reception[2].sin6_addr,adr_ip,INET6_ADDRSTRLEN)==NULL){
+		perror("inet_ntop\n");
+		exit(EXIT_FAILURE);		
+	}
+	printf("Ip source: %s\n",adr_ip);
+               			remplir_type(YES,type);
+               			//envoyer_mess6(sock[3],type,envoi_reception[2]);
+               			sendto(sock_alive,type,2,0,(struct sockaddr *)&envoi_reception[2],addrlen);
+               			printf("J'ai repondu\n");
+               		break;
 				    default:
 				        // type de message inconnu
 				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
@@ -592,6 +542,22 @@ int main(int argc, char * argv[]){
         		// remise à zéro
         		memset(mess, '\0', MESS_MAX_SIZE);
         		memset(buf, '\0', MESS_MAX_SIZE);
+			}
+			else if(FD_ISSET(sock_alive,&read_sds)){
+				struct sockaddr_in6 recep;
+				if(recvfrom(sock_alive, mess, MESS_MAX_SIZE, 0,
+            		(struct sockaddr *)&recep, &addrlen) == ERROR){
+				    perror("recvfrom");
+				    exit(EXIT_FAILURE);
+				}
+					sleep(1);
+						printf("je recoit un keep alive de %hi\n",envoi_reception[2].sin6_port);
+
+               			remplir_type(YES,type);
+               			envoyer_mess6(sock[3],type,recep);
+               			printf("J'ai repondu\n");
+			
+			
 			}
 			else{
 				printf("timeout ona rien recu\n");
