@@ -769,9 +769,14 @@ void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * se
     return;   
 }
 */
-void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs){
+void * keep_alive(void * args){
+	struct ka_data * const data= args;
+	struct sockaddr_in6 * liste=data->liste;
+	int serveurs=data->sockfd;
+	int * nb_serveur=data->nb_serv;
     int i;
     char type[2];
+    int * end=data->exit;
     socklen_t addrlen = sizeof(struct sockaddr_in6);
     struct sockaddr_in6 reception;
     //char lg[3];
@@ -786,35 +791,65 @@ void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs){
    	struct timeval waitTh;	
 	int ret;
 	printf("Debut boucle keep alive\n");
-    for(i=0; i<*nb_serveur; i++){
-    	printf("J'envoie vers %d\n",liste[i].sin6_port);
-    	envoyer_mess6(serveurs,type,liste[i]);
-    	waitTh.tv_sec 	= 5;
-		waitTh.tv_usec 	= 0;
-		FD_ZERO(&read_sds);
-		FD_SET(serveurs, &read_sds);
-		ret= select(serveurs+1,&read_sds,NULL, NULL, &waitTh);
-		if(ret < 0){
-			fprintf(stderr,"select a bugué\n");
-			exit(EXIT_FAILURE);
-		}
-		else if(FD_ISSET(serveurs,&read_sds)){
-			// on recoit le message
-			printf("J'ai recu une reponse\n");
-			if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
-            		(struct sockaddr *)&reception, &addrlen) == ERROR){
-				    perror("recvfrom");
-				    exit(EXIT_FAILURE);
+	while(*end != 1){
+		for(i=0; i<*nb_serveur; i++){
+			printf("J'envoie vers %d\n",liste[i].sin6_port);
+			envoyer_mess6(serveurs,type,liste[i]);
+			waitTh.tv_sec 	= 5;
+			waitTh.tv_usec 	= 0;
+			FD_ZERO(&read_sds);
+			FD_SET(serveurs, &read_sds);
+			ret= select(serveurs+1,&read_sds,NULL, NULL, &waitTh);
+			if(ret < 0){
+				fprintf(stderr,"select a bugué\n");
+				//pthread_exit ?
+				exit(EXIT_FAILURE);
 			}
-			//rien 			
+			else if(FD_ISSET(serveurs,&read_sds)){
+				// on recoit le message
+				printf("J'ai recu une reponse\n");
+				if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
+		        		(struct sockaddr *)&reception, &addrlen) == ERROR){
+						perror("recvfrom");
+						//pthread_exit?
+						exit(EXIT_FAILURE);
+				}
+				//rien 			
+			}
+			else{
+				printf("Delai depassé\n");
+				printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
+				//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
+				supprimer_serveur(i,nb_serveur,liste);
+			}
 		}
-		else{
-			printf("Delai depassé\n");
-			printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
-			//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
-			supprimer_serveur(i,nb_serveur,liste);
-    	}
-    }
-    return;
+		sleep(15);
+	}
+    return NULL;
 }
 
+void * deconnexion_serv(void * args){
+	struct ka_data * const data= args;
+	struct sockaddr_in6 * liste=data->liste;
+	int * nb_serveur=data->nb_serv;
+    int i;
+	struct sockaddr_in6 deco=data->ip_deco;
+	char adr_ip_serv[INET6_ADDRSTRLEN];
+	char adr_ip_tmp[INET6_ADDRSTRLEN];
+	
+	if(inet_ntop(AF_INET6,&deco.sin6_addr,adr_ip_serv,INET6_ADDRSTRLEN)==NULL){
+		perror("inet_ntop\n");
+		exit(EXIT_FAILURE);		
+	}	
+	printf("Le serveur avec l'ip: %s va s'est deconnecté\n",adr_ip_serv);
+	for(i=0; i < *nb_serveur; i++){
+		if(inet_ntop(AF_INET6,&liste[i].sin6_addr,adr_ip_tmp,INET6_ADDRSTRLEN)==NULL){
+			perror("inet_ntop\n");
+			exit(EXIT_FAILURE);		
+		}
+		if (strncmp(adr_ip_serv,adr_ip_tmp,INET_ADDRSTRLEN)==0){
+			supprimer_serveur(i,nb_serveur,liste);		
+		}
+	}
+	return NULL;
+}

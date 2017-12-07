@@ -87,49 +87,6 @@ static void * recv_server (void * infos){
 
 
 
-/*
- * \fn static void * keep_alive (void * server)
- * \brief Fonction appelé par un thread qui s'occupe du keep
- *     alive entre les serveurs.
- *
- * \param server Une structure contenant les données nécessaires
- */
-/*
-static void * keep_alive (void * server){
-    // keep alive avec les server
-    int i;
-    socklen_t addrlen = 2;
-    struct sockaddr_in6 addr_dest;
-    struct ka_data * args;
-    char buf[2]; 
-    memset(buf, '\0', 2);
-
-    if(server != NULL) args = server;
-    else return NULL;
-
-    while(1){
-        for(i = 0; i < args->nb_serv; i++){
-            remplir_type(KEEP_ALIVE, buf);
-            creation_chaine(buf, "", "", "");
-            // on demande si le serveur est en vie
-            envoyer_mess6(args->sockfd, buf, args->liste[i]);
-            memset(buf, '\0', 2);
-            // on attend un réponse
-            if(recvfrom(args->sockfd, buf, MESS_MAX_SIZE, 0,
-                (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
-                perror("recvfrom");
-                close(args->sockfd);
-                exit(EXIT_FAILURE);
-            }
-            memset(buf, '\0', 2);
-
-        } // fin for
-    } // fin while
-    return NULL;
-}
-
-*/
-
 
 /**
  * \fn int main (int argc, char * argv[])
@@ -172,8 +129,14 @@ int main(int argc, char * argv[]){
     DHT * t = NULL; 
     //pthread_t recv_server_thread;
     //pthread_t send_server_thread;
-    //pthread_t keep_alive_thread;
-   // struct ka_data thread_arg;
+    pthread_t keep_alive_thread;
+    pthread_t deco_serveur;
+   struct ka_data thread_arg;
+    
+    
+
+    
+    
     
     memset(mess, '\0', MESS_MAX_SIZE);
     memset(buf, '\0', MESS_MAX_SIZE);
@@ -274,11 +237,18 @@ int main(int argc, char * argv[]){
 	// Lier socket envoi serveur	
     lier_socket6(sock[3], &envoi_reception[3]);
 
+
+    /**		INITIALISATION DES THREADS		**/
+   	thread_arg.sockfd=sock_alive;
+   	thread_arg.nb_serv=&nb_server;
+   	thread_arg.liste=liste_server;
+   	thread_arg.exit=&end;
+   	
+
+
     // on dit aux autres serveurs qu'on est là
        if(connexion == 1){
-        //init socket serveur
-        //sock_serv = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-        //lier_socket6(sock_serv, &addr_server);
+		// On veut dire qu'on veut se connecter
 		remplir_type(NEW,type);
         printf("On a envoye %s\n",type);
 		//On envoie le message au serveur
@@ -294,11 +264,12 @@ int main(int argc, char * argv[]){
 			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
 				exit(EXIT_FAILURE);	
 		}
-		send_server_list(sock[3],liste_server,&nb_server);
+		
+		//send_hash_table(sock[3],&envoi_reception[2],t);
         // lancement d'un thread qui s'occupe de la reception des serveurs
     }
 
-
+	pthread_create(&keep_alive_thread,NULL,keep_alive,&thread_arg);
 
 	if ( sock[0] > sock[2] ){
 		max_sd = (sock[0]+1);
@@ -356,7 +327,7 @@ int main(int argc, char * argv[]){
 				            						// Envoyer have a tous les serveur
                             int i;
                             printf("Port de alive: %d\n",alive.sin6_port);
-                            keep_alive(&nb_server,liste_server,sock_alive);
+                            //keep_alive(&nb_server,liste_server,sock_alive);
                             remplir_type(HAVE, type);
                             memcpy(buf,type,1);
                             printf("Serveur restants apres keep alive %d\n",nb_server);
@@ -404,22 +375,13 @@ int main(int argc, char * argv[]){
 				            end = 0;
 				        }
 				        free(hash);
-				        break;
-				    case NEW:
-				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
-				        if(nb_server>9){
-                            printf("Il n'y a plus de place dans la liste de serveur\n");
-				        	remplir_type(ERROR,type);
-				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
+				        //On envoie un deco a tous les serveurs
+				        int i;
+				        remplir_type(DECO,type);
+				        for(i=0;i<nb_server;i++){
+				        	envoyer_mess6(sock[1],type,liste_server[i]);
 				        }
-				        else{
-				        	liste_server[nb_server]=envoi_reception[0];
-				        	nb_server++;
-				        	printf("Nb de serveur connus %d\n",nb_server);
-				        	remplir_type(YES,type);
-				        	envoyer_mess6(sock[3],type,envoi_reception[0]);	
-                            send_hash_table(sock[3],&envoi_reception[0],t);
-				        }
+				        free(hash);
 				        break;
 				    default:
 				        // type de message inconnu
@@ -468,21 +430,20 @@ int main(int argc, char * argv[]){
 				    case NEW:
 				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
+                            printf("Il n'y a plus de place dans la liste de serveur\n");
 				        	remplir_type(ERROR,type);
-                            printf("On a plus de place\n");
 				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
 				        }
 				        else{
 				        	liste_server[nb_server]=envoi_reception[2];
-				        	
 				        	remplir_type(YES,type);
-                            printf("On a de la place\n");
-                            // On fait un insert server faudra faire la fonction
-                            //liste_server[nb_server].sin6_port=htons(8000);
-				        	envoyer_mess6(sock[3],type,liste_server[nb_server]);
-                            nb_server++;
-                            printf("On envoie la liste de serveur\n");
-                            send_server_list(sock[3],liste_server,&nb_server);
+				        	envoyer_mess6(sock[3],type,envoi_reception[2]);	
+				        	affiche_dht(t);
+				        	sleep(1);
+				        	send_hash_table(sock[3],&liste_server[nb_server],t);
+				        	nb_server++;
+				        	send_server_list(sock[3],liste_server,&nb_server);
+				        	printf("Nb de serveur connus %d\n",nb_server);
 				        }
 				        break;
                     case NEW_SERV:
@@ -501,24 +462,10 @@ int main(int argc, char * argv[]){
                             print_sip_list(&nb_server,liste_server);
                         break;
 				    case DECO:
+				    	thread_arg.ip_deco=envoi_reception[2];
+				    	pthread_create(&deco_serveur,NULL,deconnexion_serv,&thread_arg);
 				        // un serveur se déconnecte
 										        
-				        break;
-				    case EXIT:
-				        // on demande au serveur de s'arreter
-				        // on vérifie le code d'acces
-				        printf("Demande d'arret\n");
-				        if(check_access_code(hash) == 0){
-				            printf("mot de passe correct\n");
-				            // arret du keep alive
-				        //    pthread_exit(&serveur__thread);
-				            end = 1;
-				        }
-				        else{
-				            printf("mot de passe incorrect\n");
-				            end = 0;
-				        }
-				        free(hash);
 				        break;
 					case KEEP_ALIVE:
 						printf("je recoit un keep alive de %d\n",envoi_reception[2].sin6_port);

@@ -66,10 +66,12 @@ typedef struct hash_cel{
  */
 struct ka_data{
     int sockfd;
-    int nb_serv;
+    int * nb_serv;
     pthread_mutex_t acces_table;
     pthread_mutex_t acces_liste;
     struct sockaddr_in6 * liste;
+    int * exit;
+    struct sockaddr_in6 ip_deco;
 };
 
 
@@ -285,8 +287,8 @@ void inserer_serveur(int * nb_serveur, struct sockaddr_in6 * recepteur, int * se
  * \param liste de sockaddr_in6 des serveurs
  * \param serveurs liste de socket associes au serveurs
  */
-void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs);
-
+//void keep_alive(int *nb_serveur, struct sockaddr_in6 * liste, int serveurs);
+void * keep_alive(void * args);
 /*
  * \fn void send_server_list(int sockfd,struct sockaddr_in6 * recepteur, int * nb_serv, struct sockaddr_in6 * liste)
  * \brief Envoi de la liste des serveurs
@@ -305,6 +307,13 @@ void send_server_list(int sockfd,struct sockaddr_in6 * liste, int * nb_serv);
  * \param liste de sockaddr_in6 des serveurs
  */
 void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struct sockaddr_in6 * new_server);
+
+/*
+ * \fn void * deconnexion_serv(void * args)
+ * \brief fonction pour dire qu'un serveur ss'"est deonnecté
+ * \param args structure contenant les arguments pour le thread
+ */
+void * deconnexion_serv(void * args);
 
 void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste);
 #endif
