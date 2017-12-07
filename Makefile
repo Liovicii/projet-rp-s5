@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -Werror -g
+CFLAGS=-Wall -Wextra -Werror -g -lpthread
 EXEC=server client
 COV=-fprofile-arcs -ftest-coverage
 THREAD=-l pthread
