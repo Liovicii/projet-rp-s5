@@ -52,7 +52,7 @@ int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
             else{
                 // association à l'adresse réseau de l'ip du hostname résolu
                 inet_pton(AF_INET6,ip,(void*)addr->sin6_addr.s6_addr);
-                printf("%s résolu en %s\n", arg_ip, ip);
+                //printf("%s résolu en %s\n", arg_ip, ip);
                 return 0;
             }
         }
@@ -790,10 +790,10 @@ void * keep_alive(void * args){
    	fd_set read_sds;
    	struct timeval waitTh;	
 	int ret;
-	printf("Debut boucle keep alive\n");
+	//printf("Debut boucle keep alive\n");
 	while(*end != 1){
 		for(i=0; i<*nb_serveur; i++){
-			printf("J'envoie vers %d\n",liste[i].sin6_port);
+			//printf("J'envoie vers %d\n",liste[i].sin6_port);
 			envoyer_mess6(serveurs,type,liste[i]);
 			waitTh.tv_sec 	= 5;
 			waitTh.tv_usec 	= 0;
@@ -807,7 +807,7 @@ void * keep_alive(void * args){
 			}
 			else if(FD_ISSET(serveurs,&read_sds)){
 				// on recoit le message
-				printf("J'ai recu une reponse\n");
+				//printf("J'ai recu une reponse\n");
 				if(recvfrom(serveurs, mess, MESS_MAX_SIZE, 0,
 		        		(struct sockaddr *)&reception, &addrlen) == ERROR){
 						perror("recvfrom");
@@ -817,8 +817,8 @@ void * keep_alive(void * args){
 				//rien 			
 			}
 			else{
-				printf("Delai depassé\n");
-				printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
+				//printf("Delai depassé\n");
+				//printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
 				//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
 				supprimer_serveur(i,nb_serveur,liste);
 			}

@@ -253,16 +253,13 @@ int main(int argc, char * argv[]){
        if(connexion == 1){
 		// On veut dire qu'on veut se connecter
 		remplir_type(NEW,type);
-        printf("On a envoye %s\n",type);
 		//On envoie le message au serveur
-		printf("On demande de se connecter\n");
 		envoyer_mess6(sock[2],type,liste_server[0]);
 		//On attends la reponse
 		memset(buf,'\0',MESS_MAX_SIZE);
 		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[2]);
 		extract_string(buf,type,0,LENGTH_TYPE);
 		type_mess = get_type_from_mess(buf);
-		printf("Valeure de peut se connecter %d\n",type_mess);
 		if(type_mess == ERROR){
 			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
 				exit(EXIT_FAILURE);	
@@ -318,7 +315,6 @@ int main(int argc, char * argv[]){
 				switch(type_mess){
 		
 				    case PUT:
-				    		printf("Message recu :\n %s\n",buf);
 				         ip_m = extraire_ip_mess(buf);
 				        // message de type PUT
 				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
@@ -326,16 +322,13 @@ int main(int argc, char * argv[]){
 				        }
 				        // on doit envoyer le hash aux autres serveurs !
 				        if(test != NTD){
-				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
 				            						// Envoyer have a tous les serveur
                             int i;
-                            printf("Port de alive: %d\n",alive.sin6_port);
                             //keep_alive(&nb_server,liste_server,sock_alive);
                             remplir_type(HAVE, type);
+                            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
                             memcpy(buf,type,1);
-                            printf("Serveur restants apres keep alive %d\n",nb_server);
                             for( i=0; i<nb_server; i++){
-                                printf("On envoie: '%s' au serveur %d\n",buf,i);
                                 envoyer_mess6(sock[3], buf, liste_server[i]);
                             }
                             
@@ -352,7 +345,6 @@ int main(int argc, char * argv[]){
 				            get = malloc(25);
 				            memcpy(get, "no IP match with request\0", 25);
 				        }
-				        printf("GET: %s\n", get);
 				        // on doit envoyer un message au client
 				        // creation du message
 				        remplir_lg("", get, lg);
@@ -397,7 +389,6 @@ int main(int argc, char * argv[]){
         		memset(buf, '\0', MESS_MAX_SIZE);
 			}
 			else if(FD_ISSET(sock[2],&read_sds)){
-				printf("On a recu un message du serveur\n");
 				if(recvfrom(sock[2], buf, MESS_MAX_SIZE, 0,
             		(struct sockaddr *)&envoi_reception[2], &addrlen) == ERROR){
 				    perror("recvfrom");
@@ -407,16 +398,13 @@ int main(int argc, char * argv[]){
 					close(sock[3]);
 				    exit(EXIT_FAILURE);
 				}
-				printf("On recupere le type du message\n");
 				// analyse du message
 				type_mess = get_type_from_mess(buf);
 				hash = extraire_hash_mess(buf);
-				printf("Type de message %d NEW=%d\n",type_mess,NEW);
 				// on détermine ce qu'on doit faire
 				switch(type_mess){
 		
 				    case HAVE:
-				    	printf("On regarde si on possede le hash");
 				         ip_m = extraire_ip_mess(buf);
 				        // message de type PUT
 				        if((test = put_hash(hash, ip_m, &t)) == ERROR){
@@ -441,7 +429,7 @@ int main(int argc, char * argv[]){
 				        	liste_server[nb_server]=envoi_reception[2];
 				        	remplir_type(YES,type);
 				        	envoyer_mess6(sock[3],type,envoi_reception[2]);	
-				        	affiche_dht(t);
+				        	//affiche_dht(t);
 				        	sleep(1);
 				        	send_hash_table(sock[3],&liste_server[nb_server],t);
 				        	nb_server++;
@@ -451,8 +439,6 @@ int main(int argc, char * argv[]){
 				        break;
                     case NEW_SERV:
                             printf("On recoit une ip de serveur a ajouter: %s\n",buf);
-                            printf("On possede les ip la avant insertion\n");
-                            print_sip_list(&nb_server,liste_server);
                             ip_m = extraire_ip_mess(buf);
                             //Peut etre faire une verif ici
                             if(convert_ipv6(ip_m, "8000", &liste_server[nb_server]) == ERROR){
@@ -461,7 +447,6 @@ int main(int argc, char * argv[]){
                         	liste_server[nb_server].sin6_family=AF_INET6;
                             liste_server[nb_server].sin6_port=htons(8000);
 				        	nb_server++;
-                            printf("On possede les ip la apres insertion\n");
                             print_sip_list(&nb_server,liste_server);
                         break;
 				    case DECO:

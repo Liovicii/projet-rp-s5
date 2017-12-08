@@ -127,7 +127,7 @@ void remplir_lg(char * ip, char * hash, char * lg){
 void remplir_type(int val_type, char * type){
     snprintf(type,2,"%d",val_type);
     type[1]=('\0');
-    printf("Conversion type a l'arache %c %d\n",type[0],((int)type[0]-'0'));
+    //printf("Conversion type a l'arache %c %d\n",type[0],((int)type[0]-'0'));
     return;
 }
 
