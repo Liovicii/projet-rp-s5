@@ -837,11 +837,12 @@ void * deconnexion_serv(void * args){
 	char adr_ip_serv[INET6_ADDRSTRLEN];
 	char adr_ip_tmp[INET6_ADDRSTRLEN];
 	
+	pthread_mutex_lock(&data->acces_serveurs);
 	if(inet_ntop(AF_INET6,&deco.sin6_addr,adr_ip_serv,INET6_ADDRSTRLEN)==NULL){
 		perror("inet_ntop\n");
 		exit(EXIT_FAILURE);		
 	}	
-	printf("Le serveur avec l'ip: %s va s'est deconnecté\n",adr_ip_serv);
+	printf("Le serveur avec l'ip: %s s'est deconnecté\n",adr_ip_serv);
 	for(i=0; i < *nb_serveur; i++){
 		if(inet_ntop(AF_INET6,&liste[i].sin6_addr,adr_ip_tmp,INET6_ADDRSTRLEN)==NULL){
 			perror("inet_ntop\n");
@@ -851,5 +852,6 @@ void * deconnexion_serv(void * args){
 			supprimer_serveur(i,nb_serveur,liste);		
 		}
 	}
+	pthread_mutex_unlock(&data->acces_serveurs);
 	return NULL;
 }

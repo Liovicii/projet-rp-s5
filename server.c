@@ -1,6 +1,6 @@
 #include "dht.h"
 #include "fctsocket.h"
-#include <pthread.h>
+
 
 
 
@@ -243,6 +243,9 @@ int main(int argc, char * argv[]){
    	thread_arg.nb_serv=&nb_server;
    	thread_arg.liste=liste_server;
    	thread_arg.exit=&end;
+   	pthread_mutex_init(&thread_arg.acces_serveurs,NULL);
+   	pthread_mutex_init(&thread_arg.acces_liste,NULL);
+   	pthread_mutex_init(&thread_arg.acces_table,NULL);
    	
 
 
@@ -483,22 +486,6 @@ int main(int argc, char * argv[]){
         		// remise à zéro
         		memset(mess, '\0', MESS_MAX_SIZE);
         		memset(buf, '\0', MESS_MAX_SIZE);
-			}
-			else if(FD_ISSET(sock_alive,&read_sds)){
-				struct sockaddr_in6 recep;
-				if(recvfrom(sock_alive, mess, MESS_MAX_SIZE, 0,
-            		(struct sockaddr *)&recep, &addrlen) == ERROR){
-				    perror("recvfrom");
-				    exit(EXIT_FAILURE);
-				}
-					sleep(1);
-						printf("je recoit un keep alive de %hi\n",envoi_reception[2].sin6_port);
-
-               			remplir_type(YES,type);
-               			envoyer_mess6(sock[3],type,recep);
-               			printf("J'ai repondu\n");
-			
-			
 			}
 			else{
 				printf("timeout ona rien recu\n");

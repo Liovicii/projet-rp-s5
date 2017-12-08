@@ -12,7 +12,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <time.h>
-
+#include <pthread.h>
 
 #define ERROR           -1    // Retour de fonction pour les erreurs
 #define NTD             2     // Retour de fonction Nothing to do
@@ -67,8 +67,10 @@ typedef struct hash_cel{
 struct ka_data{
     int sockfd;
     int * nb_serv;
+    char mess[MESS_MAX_SIZE];
     pthread_mutex_t acces_table;
     pthread_mutex_t acces_liste;
+    pthread_mutex_t acces_serveurs;
     struct sockaddr_in6 * liste;
     int * exit;
     struct sockaddr_in6 ip_deco;
@@ -316,4 +318,5 @@ void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struc
 void * deconnexion_serv(void * args);
 
 void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste);
+
 #endif
