@@ -1,8 +1,8 @@
 #include "dht.h"
 #include "fctsocket.h"
+#include <signal.h>
 
-
-
+volatile sig_atomic_t sigInt=0;
 
 /**
  * \fn void usage (char * arg)
@@ -17,7 +17,9 @@ void usage(char * arg){
     exit(EXIT_FAILURE);
 }
 
-
+void Sortir(__attribute__((unused))int i){
+	sigInt=1;
+}
 
 
 
@@ -131,13 +133,13 @@ int main(int argc, char * argv[]){
     //pthread_t send_server_thread;
     pthread_t keep_alive_thread;
     pthread_t deco_serveur;
-   struct ka_data thread_arg;
-    
-    
+   	struct ka_data thread_arg;
+	struct sigaction actionExit;
+	actionExit.sa_handler=Sortir;
+    actionExit.sa_flags = 0;
+	sigemptyset(&actionExit.sa_mask);
+	sigaddset(&actionExit.sa_mask, SIGQUIT);
 
-    
-    
-    
     memset(mess, '\0', MESS_MAX_SIZE);
     memset(buf, '\0', MESS_MAX_SIZE);
     memset(lg, '\0', 3);
@@ -268,9 +270,9 @@ int main(int argc, char * argv[]){
 		//send_hash_table(sock[3],&envoi_reception[2],t);
         // lancement d'un thread qui s'occupe de la reception des serveurs
     }
-
 	pthread_create(&keep_alive_thread,NULL,keep_alive,&thread_arg);
 
+	sigaction(SIGINT,&actionExit,NULL);
 	if ( sock[0] > sock[2] ){
 		max_sd = (sock[0]+1);
 	}
@@ -284,6 +286,9 @@ int main(int argc, char * argv[]){
     //while(end != 1){
         
 		while(end!=1){
+			// Gestion du signal
+	
+			//Reception des messages
 			waitTh.tv_sec 	= 5;
 			waitTh.tv_usec 	= 50;
 			FD_ZERO(&read_sds);
@@ -292,6 +297,22 @@ int main(int argc, char * argv[]){
 			FD_SET(sock_alive, &read_sds);
 			ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
             if(ret < 0){
+            	if(sigInt==1){
+					printf("On quitte le serveur\n");
+					int i;
+					remplir_type(DECO,type);
+					for(i=0;i<nb_server;i++){
+				 		envoyer_mess6(sock[1],type,liste_server[i]);
+					}
+				
+					close(sock[0]);
+					close(sock[1]);
+					close(sock[2]);
+					close(sock[3]);
+					close(sock_alive);
+					end=1;
+					exit(EXIT_SUCCESS);
+				}
 				fprintf(stderr,"select a bugué\n");
 				exit(EXIT_FAILURE);
 			}
@@ -304,6 +325,7 @@ int main(int argc, char * argv[]){
 					close(sock[1]);
 					close(sock[2]);
 					close(sock[3]);
+					close(sock_alive);
 				    exit(EXIT_FAILURE);
 				}
 
@@ -376,7 +398,7 @@ int main(int argc, char * argv[]){
 				        for(i=0;i<nb_server;i++){
 				        	envoyer_mess6(sock[1],type,liste_server[i]);
 				        }
-				        free(hash);
+				        //free(hash);
 				        break;
 				    default:
 				        // type de message inconnu
