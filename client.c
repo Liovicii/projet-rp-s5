@@ -1,6 +1,6 @@
 #include "dht.h"
 #include "fctsocket.h"
-
+#define PORT_CLIENT	15898
 
 /*
  * \fn void usage (char * arg)
@@ -83,22 +83,15 @@ int main(int argc, char **argv)
 		my_addr.sin6_addr = in6addr_any;
 		my_addr.sin6_flowinfo=1;
 		my_addr.sin6_scope_id = 0;		
-		my_addr.sin6_port = htons(5432);	
+		my_addr.sin6_port = htons(PORT_CLIENT);	
 
 		lier_socket6(sockfd,&my_addr);
 
-		
-
-		// on le port de la destination
-		//initv6(atoi(argv[2]),&dest);
+		//On rempli la strucutre destination
 		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
 			fprintf(stderr,"Erreur: %s IP invalide\n", argv[1]);
 			usage(argv[0]);
 		}
-		//dest.sin6_family=AF_INET6;
-		//dest.sin6_port=htons(atoi(argv[2]));
-		// On initialise l'ip de la destinations
-		//setip6(argv[1],&dest,sockfd);
 
 		//On met le buffer a 0 avant d'envoyer le message
 		memset(buf,'\0',MESS_MAX_SIZE);
@@ -153,11 +146,10 @@ int main(int argc, char **argv)
 		memset(buf,'\0',MESS_MAX_SIZE);
 		
 		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
-			fprintf(stderr,"je t'aime pas nah\n");
+			fprintf(stderr,"Erreur conversion ip\n");
 			exit(EXIT_FAILURE);
 		}
-		//dest.sin6_family=AF_INET6;
-		//dest.sin6_port=htons(atoi(argv[2]));
+		
 		remplir_lg(argv[5],argv[4],length);
 		
 		concatener_ip_hash(argv[5],argv[4],ip_hash);
@@ -168,20 +160,9 @@ int main(int argc, char **argv)
 		extract_string(buf,ip,3,get_length_ip(length));
 		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
-		//printf("Val type: %s\n",type);
-		//printf("Val lg: %s\n",length);
-		//printf("Val ip mes: %s\n",ip);		
-		//printf("Val h mes: %s\n",hash);
-		
-		//printf("Message complet: %s\n",buf);
-
 		// On creer le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 	
-		// On initialise la structure 
-		//initv6(atoi(argv[2]),&dest);
-		// On initialise l'ip de la structure
-		//setip6(argv[1],&dest,sockfd);
 		// On envoie le message
 
 		envoyer_mess6(sockfd,buf,dest);
@@ -197,20 +178,19 @@ int main(int argc, char **argv)
 		}
 		//On initialise le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
-		//On rempli le type du message
+		//On rempli la structure dest
 		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
 			fprintf(stderr,"je t'aime pas nah\n");
 			exit(EXIT_FAILURE);
 		}
 		remplir_type(EXIT,type);
-		//dest.sin6_family=AF_INET6;
-		//dest.sin6_port=htons(atoi(argv[2]));
 		// On initialise la chaine de caractere
 		memset(buf,'\0',MESS_MAX_SIZE);
 
-		//On rempli la structure dest
+		//On creer le message
 		remplir_lg("",argv[4],length);
 		creation_chaine(type,length,argv[4],buf);
+		// On envoi le message
 		envoyer_mess6(sockfd,buf,dest);
 		fermer_socket(sockfd);
 		break;
