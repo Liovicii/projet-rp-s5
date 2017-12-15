@@ -299,11 +299,8 @@ int main(int argc, char * argv[]){
             if(ret < 0){
             	if(sigInt==1){
 					printf("On quitte le serveur\n");
-					int i;
-					remplir_type(DECO,type);
-					for(i=0;i<nb_server;i++){
-				 		envoyer_mess6(sock[1],type,liste_server[i]);
-					}
+					//On notifie tous les serveur qu'on s'est deconnecté
+					sendto_all_servs(sock[1],DECO,"",&nb_server,liste_server);
 				
 					close(sock[0]);
 					close(sock[1]);
@@ -344,16 +341,9 @@ int main(int argc, char * argv[]){
 				        }
 				        // on doit envoyer le hash aux autres serveurs !
 				        if(test != NTD){
-				            						// Envoyer have a tous les serveur
-                            int i;
-                            //keep_alive(&nb_server,liste_server,sock_alive);
-                            remplir_type(HAVE, type);
-                            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
-                            memcpy(buf,type,1);
-                            for( i=0; i<nb_server; i++){
-                                envoyer_mess6(sock[3], buf, liste_server[i]);
-                            }
-                            
+				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
+                           	// Envoyer have a tous les serveur
+                            sendto_all_servs(sock[1],HAVE,buf,&nb_server,liste_server);
                             free(ip_m);
 				            free(hash);
 				        }
@@ -383,8 +373,6 @@ int main(int argc, char * argv[]){
 				        printf("Demande d'arret\n");
 				        if(check_access_code(hash) == 0){
 				            printf("mot de passe correct\n");
-				            // arret du keep alive
-				        //    pthread_exit(&serveur__thread);
 				            end = 1;
 				        }
 				        else{
@@ -398,7 +386,6 @@ int main(int argc, char * argv[]){
 				        for(i=0;i<nb_server;i++){
 				        	envoyer_mess6(sock[1],type,liste_server[i]);
 				        }
-				        //free(hash);
 				        break;
 				    default:
 				        // type de message inconnu
@@ -480,8 +467,8 @@ int main(int argc, char * argv[]){
 					case KEEP_ALIVE:
 						printf("je recoit un keep alive de %d\n",envoi_reception[2].sin6_port);
                			remplir_type(YES,type);
-               			//envoyer_mess6(sock[3],type,envoi_reception[2]);
-               			sendto(sock_alive,type,2,0,(struct sockaddr *)&envoi_reception[2],addrlen);
+               			envoyer_mess6(sock_alive,type,envoi_reception[2]);
+               			//sendto(sock_alive,type,2,0,(struct sockaddr *)&envoi_reception[2],addrlen);
                			printf("J'ai repondu\n");
                		break;
 				    default:
@@ -512,6 +499,7 @@ int main(int argc, char * argv[]){
     fermer_socket(sock[1]);
 	fermer_socket(sock[2]);
 	fermer_socket(sock[3]);
+	fermer_socket(sock_alive);
     // suppression de la table
     supp_dht(t);
 
