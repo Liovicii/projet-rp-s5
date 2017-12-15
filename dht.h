@@ -85,7 +85,7 @@ struct ka_data{
  * \return Le numero de port si le paramètre est 
  *  un numéro de port valide, -1 sinon.
  */
-int port_valide(char * port);
+int port_valide(int port);
 
 
 
@@ -112,7 +112,7 @@ int parse_hostname(char * hostname, char * port, char * ip);
  * \param addr Structure dans laquelle on stock l'adresse IP.
  * \return 0 si tout se passe bien, -1 sinon.
  */
-int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr);
+int convert_ipv6(char * arg_ip, int arg_port, struct sockaddr_in6 * addr);
 
 
 
@@ -158,7 +158,7 @@ void supp_server(struct sockaddr_in6 * liste, int i, int *nb);
  * \param port Le port du serveur à ajouter
  * \nb Le nombre de serveur déjà dans la liste
  */
-void add_server(struct sockaddr_in6*liste,char*ip,char*port,int*nb);
+void add_server(struct sockaddr_in6*liste, char*ip, int port,int * nb);
 
 
 

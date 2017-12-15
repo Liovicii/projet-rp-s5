@@ -2,6 +2,13 @@
 #include "fctsocket.h"
 #include <signal.h>
 
+//Definition des ports reservers pour
+//La reception des messages du client
+#define PORT_ENV_CLIENT 8752
+#define PORT_REC_SERV	8951
+#define PORT_ENV_SERV	8952
+#define PORT_KEEP_ALIVE	8523
+
 volatile sig_atomic_t sigInt=0;
 
 /**
@@ -20,7 +27,6 @@ void usage(char * arg){
 void Sortir(__attribute__((unused))int i){
 	sigInt=1;
 }
-
 
 
 /**
@@ -55,40 +61,6 @@ void parse_option(char * arg[]){
     fprintf(stderr, "Erreur: option inconnue\n");
     usage(arg[0]);
 }
-
-
-
-/* \fn
- * \brief
- *
- * \param
- *//*
-static void * recv_server (void * infos){
-    if(infos == NULL){
-        return NULL;
-    }
-    struct ka_data * args = infos;    
-    struct sockaddr_in6 addr_dest;
-    socklen_t addrlen = sizeof(struct sockaddr_in6);
-    char buf[MESS_MAX_SIZE];
-
-    // attente d'un message du serveur    
-    if(recvfrom(args->sockfd, buf, MESS_MAX_SIZE, 0,
-        (struct sockaddr *)&addr_dest, &addrlen) == ERROR){
-        perror("recvfrom");
-           close(args->sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-
-    return NULL;
-}
-
-*/
-
-
-
-
 
 /**
  * \fn int main (int argc, char * argv[])
@@ -158,7 +130,7 @@ int main(int argc, char * argv[]){
             if(strcmp(argv[3], "-c") != 0){
                 fprintf(stderr, "Erreur: %s option inconnue\n", argv[3]);
             }
-            add_server(liste_server, argv[4], "8000", &nb_server);
+            add_server(liste_server, argv[4], PORT_REC_SERV, &nb_server);
             connexion = 1;
             break;
         default:
@@ -169,30 +141,34 @@ int main(int argc, char * argv[]){
 
 
     // vérification du port
-    if((port = port_valide(argv[2])) == ERROR){
+    if((port = port_valide(atoi(argv[2]))) == ERROR){
         fprintf(stderr, "Erreur: numero de port invalide\n");
         usage(argv[0]);
     }
 
 
     // convertir l'argument en adresse IPv6
-    if(convert_ipv6(argv[1], argv[2], &envoi_reception[0]) == ERROR){
+    //Init struct reception client
+    if(convert_ipv6(argv[1], atoi(argv[2]), &envoi_reception[0]) == ERROR){
+        usage(argv[0]);
+    } 
+	//Init struct envoi client
+    if(convert_ipv6(argv[1], PORT_ENV_CLIENT, &envoi_reception[1]) == ERROR){
         usage(argv[0]);
     } 
 
-    if(convert_ipv6(argv[1], argv[2], &envoi_reception[1]) == ERROR){
+	//Init struct reception serveur
+    if(convert_ipv6(argv[1], PORT_REC_SERV, &envoi_reception[2]) == ERROR){
         usage(argv[0]);
     } 
 
-    if(convert_ipv6(argv[1], argv[2], &envoi_reception[2]) == ERROR){
+	//Init struct envoi serveur
+    if(convert_ipv6(argv[1], PORT_ENV_SERV, &envoi_reception[3]) == ERROR){
         usage(argv[0]);
     } 
 
-    if(convert_ipv6(argv[1], argv[2], &envoi_reception[3]) == ERROR){
-        usage(argv[0]);
-    } 
-
-    if(convert_ipv6(argv[1], argv[2], &alive) == ERROR){
+	// Init struct keep_alive
+    if(convert_ipv6(argv[1], PORT_KEEP_ALIVE, &alive) == ERROR){
         usage(argv[0]);
     } 
     // initialisation socket client
@@ -201,9 +177,10 @@ int main(int argc, char * argv[]){
     sock[2] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     sock[3] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 	sock_alive = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    /*
     // initialisation adresse IP du serveur
  	alive.sin6_family = AF_INET6;
-    alive.sin6_port = htons(7667);   
+    alive.sin6_port = htons(PORT_KEEP_ALIVE);   
     
 	// Reception client    
 	envoi_reception[0].sin6_family = AF_INET6;
@@ -212,19 +189,20 @@ int main(int argc, char * argv[]){
 
 	// Envoi client
     envoi_reception[1].sin6_family = AF_INET6;
-    envoi_reception[1].sin6_port = htons(7000);
+    envoi_reception[1].sin6_port = htons(PORT_ENV_CLIENT);
 	//setip6(argv[1],&envoi_reception[3]);
 
 	// Reception serveur
     envoi_reception[2].sin6_family = AF_INET6;
-    envoi_reception[2].sin6_port = htons(8000);
+    envoi_reception[2].sin6_port = htons(PORT_REC_SERV);
 	//setip6(argv[1],&envoi_reception[3]);
 
 	// Envoi serveur
     envoi_reception[3].sin6_family = AF_INET6;
-    envoi_reception[3].sin6_port = htons(9000);
+    envoi_reception[3].sin6_port = htons(PORT_ENV_SERV);
 	//setip6(argv[1],&envoi_reception[3]);
 
+	*/
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock_alive, &alive);
 	// Lier socket reception client
@@ -240,7 +218,7 @@ int main(int argc, char * argv[]){
     lier_socket6(sock[3], &envoi_reception[3]);
 
 
-    /**		INITIALISATION DES THREADS		**/
+    /**		INITIALISATION DE LA STRUCTURE POUR LES THREADS**/
    	thread_arg.sockfd=sock_alive;
    	thread_arg.nb_serv=&nb_server;
    	thread_arg.liste=liste_server;
@@ -262,14 +240,19 @@ int main(int argc, char * argv[]){
 		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[2]);
 		extract_string(buf,type,0,LENGTH_TYPE);
 		type_mess = get_type_from_mess(buf);
+		//On analyse la reponse
 		if(type_mess == ERROR){
+			//Si la reponse est negative on sort
 			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
-				exit(EXIT_FAILURE);	
+			close(sock[0]);
+			close(sock[1]);
+			close(sock[2]);
+			close(sock[3]);
+			close(sock_alive);
+			exit(EXIT_FAILURE);	
 		}
-		
-		//send_hash_table(sock[3],&envoi_reception[2],t);
-        // lancement d'un thread qui s'occupe de la reception des serveurs
     }
+    //On lance le thread de keep alive
 	pthread_create(&keep_alive_thread,NULL,keep_alive,&thread_arg);
 
 	sigaction(SIGINT,&actionExit,NULL);
@@ -286,7 +269,6 @@ int main(int argc, char * argv[]){
     //while(end != 1){
         
 		while(end!=1){
-			// Gestion du signal
 	
 			//Reception des messages
 			waitTh.tv_sec 	= 5;
@@ -380,12 +362,8 @@ int main(int argc, char * argv[]){
 				            end = 0;
 				        }
 				        free(hash);
-				        //On envoie un deco a tous les serveurs
-				        int i;
-				        remplir_type(DECO,type);
-				        for(i=0;i<nb_server;i++){
-				        	envoyer_mess6(sock[1],type,liste_server[i]);
-				        }
+				        //On notifie tous les serveur qu'on va se deconnecter
+						sendto_all_servs(sock[1],HAVE,buf,&nb_server,liste_server);
 				        break;
 				    default:
 				        // type de message inconnu
@@ -401,10 +379,12 @@ int main(int argc, char * argv[]){
 				if(recvfrom(sock[2], buf, MESS_MAX_SIZE, 0,
             		(struct sockaddr *)&envoi_reception[2], &addrlen) == ERROR){
 				    perror("recvfrom");
+				    //Erreur de reception on quitte tout
 				    close(sock[0]);
 					close(sock[1]);
 					close(sock[2]);
 					close(sock[3]);
+					close(sock_alive);
 				    exit(EXIT_FAILURE);
 				}
 				// analyse du message
@@ -431,45 +411,48 @@ int main(int argc, char * argv[]){
 				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
                             printf("Il n'y a plus de place dans la liste de serveur\n");
+				        	// Il n'y a plus de place dans la liste
+				        	// On dit qu'il n'y a plus de place
 				        	remplir_type(ERROR,type);
 				        	envoyer_mess6(sock[3], mess, envoi_reception[2]);
 				        }
 				        else{
+				        	// Il y a de la place
+				        	// On repond au serveur qu'il y a de la place
 				        	liste_server[nb_server]=envoi_reception[2];
 				        	remplir_type(YES,type);
-				        	envoyer_mess6(sock[3],type,envoi_reception[2]);	
-				        	//affiche_dht(t);
-				        	sleep(1);
+				        	envoyer_mess6(sock[3],type,envoi_reception[2]);
+				        	//On lui envoie la table de hash
 				        	send_hash_table(sock[3],&liste_server[nb_server],t);
+				        	//On invremente le nombre de serveurs
 				        	nb_server++;
+				        	//On lui partage les serveurs connus
 				        	send_server_list(sock[3],liste_server,&nb_server);
-				        	printf("Nb de serveur connus %d\n",nb_server);
 				        }
 				        break;
                     case NEW_SERV:
                             printf("On recoit une ip de serveur a ajouter: %s\n",buf);
                             ip_m = extraire_ip_mess(buf);
-                            //Peut etre faire une verif ici
-                            if(convert_ipv6(ip_m, "8000", &liste_server[nb_server]) == ERROR){
+                            //On creer une entree pour stocker les coordonnées du serveur
+                            if(convert_ipv6(ip_m, PORT_ENV_SERV, &liste_server[nb_server]) == ERROR){
                                 usage(argv[0]);
                             } 
+                            //On fini de remplir la structure
                         	liste_server[nb_server].sin6_family=AF_INET6;
-                            liste_server[nb_server].sin6_port=htons(8000);
+                            //On rempli le port de communication par defaut
+                            liste_server[nb_server].sin6_port=htons(PORT_ENV_SERV);
 				        	nb_server++;
-                            print_sip_list(&nb_server,liste_server);
                         break;
 				    case DECO:
+				    	//On met l'ip a supprimer de la liste dans la structure
 				    	thread_arg.ip_deco=envoi_reception[2];
+				    	//On lance le thread
 				    	pthread_create(&deco_serveur,NULL,deconnexion_serv,&thread_arg);
-				        // un serveur se déconnecte
-										        
 				        break;
 					case KEEP_ALIVE:
-						printf("je recoit un keep alive de %d\n",envoi_reception[2].sin6_port);
-               			remplir_type(YES,type);
+						//On reponds par yes quand on recoit un message
+						remplir_type(YES,type);
                			envoyer_mess6(sock_alive,type,envoi_reception[2]);
-               			//sendto(sock_alive,type,2,0,(struct sockaddr *)&envoi_reception[2],addrlen);
-               			printf("J'ai repondu\n");
                		break;
 				    default:
 				        // type de message inconnu
@@ -481,9 +464,8 @@ int main(int argc, char * argv[]){
         		memset(mess, '\0', MESS_MAX_SIZE);
         		memset(buf, '\0', MESS_MAX_SIZE);
 			}
-			else{
-				printf("timeout ona rien recu\n");
-			}
+			//Tant qu'on recoit rien on refait un tour dans la boucle
+			else{}
 			
 		}
 

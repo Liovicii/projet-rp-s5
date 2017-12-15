@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 		}
 	
 	// verification du port
-	if(port_valide(argv[2])	== ERROR){
+	if(port_valide(atoi(argv[2]))	== ERROR){
 		fprintf(stderr, "Erreur: %d port invalide", atoi(argv[2]));
 		usage(argv[0]);
 	}
@@ -89,12 +89,12 @@ int main(int argc, char **argv)
 
 		// on le port de la destination
 		//initv6(atoi(argv[2]),&dest);
-		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
 			fprintf(stderr,"Erreur: %s IP invalide\n", argv[1]);
 			usage(argv[0]);
 		}
-		dest.sin6_family=AF_INET6;
-		dest.sin6_port=htons(atoi(argv[2]));
+		//dest.sin6_family=AF_INET6;
+		//dest.sin6_port=htons(atoi(argv[2]));
 		// On initialise l'ip de la destinations
 		//setip6(argv[1],&dest,sockfd);
 
@@ -142,12 +142,12 @@ int main(int argc, char **argv)
 		remplir_type(PUT,type);
 		memset(buf,'\0',MESS_MAX_SIZE);
 		
-		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
 			fprintf(stderr,"je t'aime pas nah\n");
 			exit(EXIT_FAILURE);
 		}
-		dest.sin6_family=AF_INET6;
-		dest.sin6_port=htons(atoi(argv[2]));
+		//dest.sin6_family=AF_INET6;
+		//dest.sin6_port=htons(atoi(argv[2]));
 		remplir_lg(argv[5],argv[4],length);
 		
 		concatener_ip_hash(argv[5],argv[4],ip_hash);
@@ -188,13 +188,13 @@ int main(int argc, char **argv)
 		//On initialise le socket
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 		//On rempli le type du message
-		if (convert_ipv6(argv[1],argv[2],&dest) == ERROR){
+		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
 			fprintf(stderr,"je t'aime pas nah\n");
 			exit(EXIT_FAILURE);
 		}
 		remplir_type(EXIT,type);
-		dest.sin6_family=AF_INET6;
-		dest.sin6_port=htons(atoi(argv[2]));
+		//dest.sin6_family=AF_INET6;
+		//dest.sin6_port=htons(atoi(argv[2]));
 		// On initialise la chaine de caractere
 		memset(buf,'\0',MESS_MAX_SIZE);
 

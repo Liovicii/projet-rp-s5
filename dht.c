@@ -2,12 +2,11 @@
 #include "fctsocket.h"
 
 
-int port_valide(char * port){
-    int p = atoi(port);
-    if( (p > 65536) || (p <= 0) ){
+int port_valide(int port){
+    if( (port > 65536) || (port <= 0) ){
         return ERROR;
     }
-    return p;
+    return port;
 }
 
 
@@ -37,22 +36,27 @@ int parse_hostname(char * hostname, char * port, char * ip){
 }
 
 
-int convert_ipv6(char * arg_ip, char * arg_port, struct sockaddr_in6 * addr){
+int convert_ipv6(char * arg_ip, int arg_port, struct sockaddr_in6 * addr){
     int convert;
+    char port[17];
+    snprintf(port,17,"%d",arg_port);
     char ip[INET6_ADDRSTRLEN];
     memset(ip, '\0', INET6_ADDRSTRLEN);
     convert = inet_pton(AF_INET6, ip, (void*)addr->sin6_addr.s6_addr);
     if(convert <= 0){
         if(convert == 0){
             // IPv6 invalide, on regarde si on a un nom de domaine
-            if(parse_hostname(arg_ip, arg_port, ip) == ERROR){
+            if(parse_hostname(arg_ip, port, ip) == ERROR){
                 fprintf(stderr, "Erreur: getaddrinfo unknown arg %s\n", arg_ip);
                 return ERROR;
             }
             else{
                 // association à l'adresse réseau de l'ip du hostname résolu
                 inet_pton(AF_INET6,ip,(void*)addr->sin6_addr.s6_addr);
-                //printf("%s résolu en %s\n", arg_ip, ip);
+                //associe le port a l'adresse
+                addr->sin6_port=htons(arg_port);
+                //associe la famille a la structure
+                addr->sin6_family= AF_INET6;                
                 return 0;
             }
         }
@@ -619,7 +623,7 @@ void delete_ip(char * hash, char * ip, DHT * table, int liste){
 /***** LISTE DES SERVER *****/
 
 
-void add_server(struct sockaddr_in6 * liste, char * ip, char * port, int * nb){
+void add_server(struct sockaddr_in6 * liste, char * ip, int port, int * nb){
     if(*nb == MAX_SERVER - 1){    
         fprintf(stderr, "La liste des serveurs est remplie\n");
         fprintf(stderr, "server %s pas ajoute\n", ip);
@@ -632,7 +636,7 @@ void add_server(struct sockaddr_in6 * liste, char * ip, char * port, int * nb){
     }
     struct sockaddr_in6 new;
     new.sin6_family = AF_INET6;
-    new.sin6_port = htons(atoi(port));
+    new.sin6_port = htons(port);
     convert_ipv6(ip, port, &new);
     liste[*nb] = new;
     *nb = *nb+1;
@@ -679,7 +683,6 @@ void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table){
             creation_chaine(type,lg,ip_hash,mess);
             //On envoie le message
             envoyer_mess6(sockfd,mess,*recepteur);
-            printf("Message envoyé: %s\n",mess);
             //On se deplace
             free(ip_m);
             tmp_ip = tmp_ip->next;
@@ -688,7 +691,6 @@ void send_hash_table(int sockfd, struct sockaddr_in6 * recepteur, DHT * table){
         free(hash);
         // on passe au hash suivant
         tmp_dht = tmp_dht->next;
-        printf("\n");
     }  
     return;
 }
