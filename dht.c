@@ -855,3 +855,37 @@ void * deconnexion_serv(void * args){
 	pthread_mutex_unlock(&data->acces_serveurs);
 	return NULL;
 }
+
+void sendto_all_servs(int sockfd, int type, char * mess, int * nb_server, struct sockaddr_in6 * liste){
+	int i;
+	char type_m[2];
+	memset(type_m, '\0', 2);
+	
+	switch(type){
+		case DECO:
+			remplir_type(DECO,type_m);
+			for(i=0;i<*nb_server;i++){
+				envoyer_mess6(sockfd,type_m,liste[i]);
+			}
+			break;
+		case HAVE:
+			remplir_type(HAVE, type_m);
+			memcpy(mess,type_m,1);
+			for( i=0; i<*nb_server; i++){
+            	envoyer_mess6(sockfd, mess, liste[i]);
+            }
+			break;
+		default:
+			fprintf(stderr,"Type inconnu :%d\n",type);
+			exit(EXIT_FAILURE);
+		}
+	return;
+}
+	
+
+
+
+
+
+
+

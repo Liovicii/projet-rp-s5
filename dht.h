@@ -312,11 +312,29 @@ void send_new_server(int sockfd,struct sockaddr_in6 * liste, int * nb_serv,struc
 
 /*
  * \fn void * deconnexion_serv(void * args)
- * \brief fonction pour dire qu'un serveur ss'"est deonnecté
+ * \brief fonction pour dire qu'un serveur s'est deonnecté
  * \param args structure contenant les arguments pour le thread
  */
 void * deconnexion_serv(void * args);
 
+/*
+ * \fn void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste)
+ * \brief Affiche tous les serveurs qu'on connait
+ * \param nb_serv nombre de serveurs
+ * \param liste liste des serveurs
+ */
 void print_sip_list(int * nb_serv, struct sockaddr_in6 * liste);
 
+/*
+ * \fn void sendto_all_servs(int sockfd, int type, char * mess, int * nb_server,\
+ struct sockaddr_in6 * liste)
+ * \brief Affiche tous les serveurs qu'on connait
+ * \param sockfd socket a partir duquel on envera le message
+ * \param type type du message
+ * \param mess message qu'on envoie
+ * \param nb_serv nombre de serveurs
+ * \param liste liste des serveurs
+ */
+void sendto_all_servs(int sockfd, int type, char * mess, int * nb_server,\
+ struct sockaddr_in6 * liste);
 #endif
