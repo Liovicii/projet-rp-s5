@@ -143,7 +143,7 @@ int main(int argc, char * argv[]){
 
     // vérification du port
     if((port = port_valide(atoi(argv[2]))) == ERROR){
-        fprintf(stderr, "Erreur: numero de port invalide\n");
+        fprintf(stderr, "Invalid port number\n");
         usage(argv[0]);
     }
 
@@ -212,22 +212,38 @@ int main(int argc, char * argv[]){
 		//On envoie le message au serveur
 		envoyer_mess6(sock[2],type,liste_server[0]);
 		//On attends la reponse
-		memset(buf,'\0',MESS_MAX_SIZE);
-		recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[2]);
-		extract_string(buf,type,0,LENGTH_TYPE);
-		type_mess = get_type_from_mess(buf);
-		//On analyse la reponse
-		if(type_mess == ERROR){
-			//Si la reponse est negative on sort
-			fprintf(stderr,"Il n'y a trop de serveurs connectés\n");
-			close(sock[0]);
-			close(sock[1]);
-			close(sock[2]);
-			close(sock[3]);
-			close(sock_alive);
-			supp_dht(t);
-			end=1;
-			exit(EXIT_FAILURE);	
+		max_sd=sock[2]+1;
+		waitTh.tv_sec 	= 5;
+		waitTh.tv_usec 	= 50;
+		FD_ZERO(&read_sds);
+		FD_SET(sock[2], &read_sds);
+		ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
+		if (ret <0){
+			perror("select\n");
+			exit(EXIT_FAILURE);
+		}
+		else if (FD_ISSET(sock[2],&read_sds)){
+			memset(buf,'\0',MESS_MAX_SIZE);
+			recevoir_mess6(sock[2],buf,MESS_MAX_SIZE,envoi_reception[2]);
+			extract_string(buf,type,0,LENGTH_TYPE);
+			type_mess = get_type_from_mess(buf);
+			//On analyse la reponse
+			if(type_mess == ERROR){
+				//Si la reponse est negative on sort
+				fprintf(stderr,"Not enough space for new connexion\n");
+				close(sock[0]);
+				close(sock[1]);
+				close(sock[2]);
+				close(sock[3]);
+				close(sock_alive);
+				supp_dht(t);
+				end=1;
+				exit(EXIT_FAILURE);	
+			}
+		}
+		else {
+			fprintf(stderr,"NO ANSWER FROM SERVER\n");
+			exit(EXIT_FAILURE);
 		}
     }
     //On lance le thread de keep alive

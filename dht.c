@@ -796,7 +796,7 @@ void * keep_alive(void * args){
 		for(i=0; i<*nb_serveur; i++){
 			//printf("J'envoie vers %d\n",liste[i].sin6_port);
 			envoyer_mess6(serveurs,type,liste[i]);
-			waitTh.tv_sec 	= 5;
+			waitTh.tv_sec 	= 10;
 			waitTh.tv_usec 	= 0;
 			FD_ZERO(&read_sds);
 			FD_SET(serveurs, &read_sds);

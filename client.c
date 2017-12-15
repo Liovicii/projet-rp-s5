@@ -8,7 +8,7 @@
  * \param arg Le nom du programme (généralement argv[0]).
  */
 void usage(char * arg){
-	fprintf(stderr,"usage: %s IP PORT <get/exit> HASH [IP]\n",arg);
+	fprintf(stderr,"usage: %s IP PORT <put/get/exit> HASH [IP]\n",arg);
 	exit(EXIT_FAILURE);
 }
 
