@@ -16,17 +16,19 @@ void usage(char * arg){
 int main(int argc, char **argv)
 {
     int sockfd,option_lue;
+    int ret;
+    int max_sd;
     char buf[MESS_MAX_SIZE];
 	char type[2];
 	char length[3];
 	char hash[TAILLE_MAX_HASH];
 	char ip_hash[TAILLE_MAX_HASH+INET6_ADDRSTRLEN];
 	char ip[INET6_ADDRSTRLEN];
-	//char * port;
 	struct sockaddr_in6 dest;
 	struct sockaddr_in6 client;
 	struct sockaddr_in6 my_addr;
-
+	struct timeval waitTh;
+	fd_set read_sds;
 	//printf("argc %d\n",argc);
 
 		switch(argc){
@@ -108,31 +110,39 @@ int main(int argc, char **argv)
 		// On creer la chaine type + lg + ip + hash
 		concatener_ip_hash("",argv[4],ip_hash);
 		creation_chaine(type,length,ip_hash,buf);
-		printf("message que l'on va envoyer: %s\n",buf);
 
-		printf("On va envoyer le hash\n");
 		envoyer_mess6(sockfd,buf,dest);
-		//fermer_socket(sockfd);
-		printf("On a envoyé le hash\n");
 		
 		// reception de la chaine de caracteres
-		printf("On attends de recevoir un message\n");
 		// On met le buffer a 0 avant de recevoir le message
 		memset(buf,'\0',MESS_MAX_SIZE);
 		initv6(sockfd,&client);
-		recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
-		//printf("On a recu la reponse\n");
-		//printf("Message recu: %s\n",buf);
-		//printf("Longueur du message: %d\n",rec);
+		
+		max_sd=sockfd+1;
+		waitTh.tv_sec 	= 5;
+		waitTh.tv_usec 	= 50;
+		FD_ZERO(&read_sds);
+		FD_SET(sockfd, &read_sds);
+		ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
+		if (ret <0){
+			perror("select");
+			exit(EXIT_FAILURE);
+		}
+		else if (FD_ISSET(sockfd,&read_sds)){
+			recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
+			extract_string(buf,type,0,LENGTH_TYPE);
+			extract_string(buf,length,1,LENGTH_LG);
+			extract_string(buf,ip,3,get_length_ip(length));
+			extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
 
-		extract_string(buf,type,0,LENGTH_TYPE);
-		extract_string(buf,length,1,LENGTH_LG);
-		extract_string(buf,ip,3,get_length_ip(length));
-		extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
-
-		// hash va contenir les ip qui sont associes au hash sur le serveur
-		printf("Ip liées au hash demandé: %s\n",hash);	
-		// close the socket
+			// hash va contenir les ip qui sont associes au hash sur le serveur
+			printf("Ip liées au hash demandé: %s\n",hash);	
+		}
+		else{
+			printf("On a pas recu de reponse de la part du serveur\n");
+			printf("Veuillez vous assurer que ce serveur est actif\n");
+		}
+			// close the socket
 		close(sockfd);
 		break;
 	case PUT:

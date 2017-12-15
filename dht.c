@@ -328,7 +328,6 @@ int insert_hash(char * hash, DHT * table){
     
     // on attache l'élément new en fin de chaine
     tmp_dht->next = new;
-    printf("Valeure inserée %s\n",tmp_dht->next->val);
     // tout s'est bien passé
     return 0;
 }
@@ -708,12 +707,12 @@ void send_server_list(int sockfd,struct sockaddr_in6 * liste, int * nb_serv){
     memset(lg,'\0',3);
     memset(type,'\0',2);
     remplir_type(NEW_SERV,type);
+    //On parcour la liste des ip connues
     for(i=0;i<*nb_serv;i++){
         if (inet_ntop(AF_INET6,&liste[i].sin6_addr,ip_serv,INET6_ADDRSTRLEN)==NULL){
             perror("inet_ntop\n");
             exit(EXIT_FAILURE);
         }
-        printf("ip du serveur %d = %s\n",i,ip_serv);
         remplir_lg(ip_serv,"",lg);
         creation_chaine(type,lg,ip_serv,mess);
         
@@ -724,10 +723,10 @@ void send_server_list(int sockfd,struct sockaddr_in6 * liste, int * nb_serv){
                 perror("inet_ntop\n");
                 exit(EXIT_FAILURE);
             }
-            printf("ip du serveur %d = %s\n",j,ip_dest);
+            //Si l'ip qu'on veut envoyer est differente de celle du serveur 
+            //auquel on envoie le message 
             if(strcmp(ip_dest,ip_serv)!=0){
-                printf("On envoie l'ip du serveur %s au serveur %s\n",ip_serv,ip_dest);
-                printf("On envoie mess: %s\n",mess);
+            	//On envoie le message
                 envoyer_mess6(sockfd,mess,liste[j]);
             }
         }
@@ -803,7 +802,7 @@ void * keep_alive(void * args){
 			FD_SET(serveurs, &read_sds);
 			ret= select(serveurs+1,&read_sds,NULL, NULL, &waitTh);
 			if(ret < 0){
-				fprintf(stderr,"select a bugué\n");
+				perror("select");
 				//pthread_exit ?
 				exit(EXIT_FAILURE);
 			}
@@ -820,12 +819,11 @@ void * keep_alive(void * args){
 			}
 			else{
 				//printf("Delai depassé\n");
-				//printf("On supprime le serveur %d nb_serveur= %d\n",i,*nb_serveur);
 				//on supprime le serveur si ca fait plus de 30 secondes qu'on attnds
 				supprimer_serveur(i,nb_serveur,liste);
 			}
 		}
-		sleep(15);
+		sleep(T_ALIVE);
 	}
     return NULL;
 }

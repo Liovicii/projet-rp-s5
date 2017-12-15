@@ -92,20 +92,21 @@ int main(int argc, char * argv[]){
 
     socklen_t addrlen = sizeof(struct sockaddr_in6);
     struct sockaddr_in6 liste_server[MAX_SERVER];
-    //struct sockaddr_in6 addr_server, addr_server_threads;
-    //struct sockaddr_in6 addr_dest;
     
     char buf[MESS_MAX_SIZE], mess[MESS_MAX_SIZE], lg[3], type[2];
     char *hash = NULL;
 	char *ip_m = NULL;
 	char *get = NULL;
-  
+	
+	//CREATION DE LA TABLE DE HASH  
     DHT * t = NULL; 
-    //pthread_t recv_server_thread;
-    //pthread_t send_server_thread;
+
+    // CREATION DES THREADS
     pthread_t keep_alive_thread;
     pthread_t deco_serveur;
    	struct ka_data thread_arg;
+	
+	// GESTION DU SIGNAL
 	struct sigaction actionExit;
 	actionExit.sa_handler=Sortir;
     actionExit.sa_flags = 0;
@@ -177,32 +178,7 @@ int main(int argc, char * argv[]){
     sock[2] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     sock[3] = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 	sock_alive = creer_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    /*
-    // initialisation adresse IP du serveur
- 	alive.sin6_family = AF_INET6;
-    alive.sin6_port = htons(PORT_KEEP_ALIVE);   
-    
-	// Reception client    
-	envoi_reception[0].sin6_family = AF_INET6;
-    envoi_reception[0].sin6_port = htons(port);
-	//setip6(argv[1],&envoi_reception[3]);
 
-	// Envoi client
-    envoi_reception[1].sin6_family = AF_INET6;
-    envoi_reception[1].sin6_port = htons(PORT_ENV_CLIENT);
-	//setip6(argv[1],&envoi_reception[3]);
-
-	// Reception serveur
-    envoi_reception[2].sin6_family = AF_INET6;
-    envoi_reception[2].sin6_port = htons(PORT_REC_SERV);
-	//setip6(argv[1],&envoi_reception[3]);
-
-	// Envoi serveur
-    envoi_reception[3].sin6_family = AF_INET6;
-    envoi_reception[3].sin6_port = htons(PORT_ENV_SERV);
-	//setip6(argv[1],&envoi_reception[3]);
-
-	*/
     // on attache l'adresse IP du serveur au socket
     lier_socket6(sock_alive, &alive);
 	// Lier socket reception client
@@ -249,6 +225,8 @@ int main(int argc, char * argv[]){
 			close(sock[2]);
 			close(sock[3]);
 			close(sock_alive);
+			supp_dht(t);
+			end=1;
 			exit(EXIT_FAILURE);	
 		}
     }
@@ -262,8 +240,6 @@ int main(int argc, char * argv[]){
 	if ( sock[2] > sock[0] ){
 		max_sd = ( sock[2]+1);
 	}
-	if( sock_alive>max_sd)
-		max_sd=sock_alive;
 
     // communications du serveur
     //while(end != 1){
@@ -276,7 +252,6 @@ int main(int argc, char * argv[]){
 			FD_ZERO(&read_sds);
 			FD_SET(sock[0], &read_sds);
 			FD_SET(sock[2], &read_sds);
-			FD_SET(sock_alive, &read_sds);
 			ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
             if(ret < 0){
             	if(sigInt==1){
@@ -290,13 +265,14 @@ int main(int argc, char * argv[]){
 					close(sock[3]);
 					close(sock_alive);
 					end=1;
+					supp_dht(t);
 					exit(EXIT_SUCCESS);
 				}
-				fprintf(stderr,"select a bugué\n");
+				perror("select");
 				exit(EXIT_FAILURE);
 			}
 			else if(FD_ISSET(sock[0],&read_sds)){
-				printf("On a recu un message du client\n");
+				//On recupere le message que le client nous a envoyé
 				if(recvfrom(sock[0], buf, MESS_MAX_SIZE, 0,
             		(struct sockaddr *)&envoi_reception[0], &addrlen) == ERROR){
 				    perror("recvfrom");
@@ -304,14 +280,16 @@ int main(int argc, char * argv[]){
 					close(sock[1]);
 					close(sock[2]);
 					close(sock[3]);
+					end=1;
 					close(sock_alive);
+					supp_dht(t);
 				    exit(EXIT_FAILURE);
 				}
 
-				// analyse du message
+				
 				type_mess = get_type_from_mess(buf);
 				hash = extraire_hash_mess(buf);
-
+				// analyse du message
 				// on détermine ce qu'on doit faire
 				switch(type_mess){
 		
@@ -384,6 +362,8 @@ int main(int argc, char * argv[]){
 					close(sock[1]);
 					close(sock[2]);
 					close(sock[3]);
+					end=1;
+					supp_dht(t);
 					close(sock_alive);
 				    exit(EXIT_FAILURE);
 				}
@@ -431,7 +411,7 @@ int main(int argc, char * argv[]){
 				        }
 				        break;
                     case NEW_SERV:
-                            printf("On recoit une ip de serveur a ajouter: %s\n",buf);
+                            //On extrait l'ip du message
                             ip_m = extraire_ip_mess(buf);
                             //On creer une entree pour stocker les coordonnées du serveur
                             if(convert_ipv6(ip_m, PORT_ENV_SERV, &liste_server[nb_server]) == ERROR){

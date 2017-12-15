@@ -20,7 +20,8 @@
 #define TAILLE_MAX_HASH 1000  // taille max d'un hash
 #define MAX_IPS         10    // nb max d'adresses IP à envoyer par le serveur
 #define MAX_SERVER      10    // nombre max de serveur qu'on peut connaitre
-#define TIME_LIMIT      60     // obsolescence après 30 secondes
+#define TIME_LIMIT      30     // obsolescence après 30 secondes
+#define T_ALIVE			5	  // Temps avant de renvoyer un keep alive
 
 #define PASS            "password123" // mot de passe serveur 
 
