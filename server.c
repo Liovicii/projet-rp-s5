@@ -334,7 +334,7 @@ int main(int argc, char * argv[]){
 				        remplir_lg("", get, lg);
 				        remplir_type(HAVE, type);
 				        creation_chaine(type, lg, get, mess);
-
+						
 				        envoyer_mess6(sock[1], mess, envoi_reception[0]);
 				        free(get);
 				        free(hash);
@@ -343,17 +343,28 @@ int main(int argc, char * argv[]){
 				        // on demande au serveur de s'arreter
 				        // on vérifie le code d'acces
 				        printf("Demande d'arret\n");
+			      		// On initialise la chaine de caractere
+						memset(buf,'\0',MESS_MAX_SIZE);
+
+						//On creer le message
+						remplir_type(DECO,type);
+
 				        if(check_access_code(hash) == 0){
 				            printf("mot de passe correct\n");
+				            remplir_lg("","mot de passe correct",lg);
+							creation_chaine(type,lg,"mot de passe correct",buf);
 				            end = 1;
 				        }
 				        else{
 				            printf("mot de passe incorrect\n");
+				            remplir_lg("","mot de passe incorrect",lg);
+							creation_chaine(type,lg,"mot de passe incorrect",buf);
 				            end = 0;
 				        }
 				        free(hash);
 				        //On notifie tous les serveur qu'on va se deconnecter
-						sendto_all_servs(sock[1],HAVE,buf,&nb_server,liste_server);
+				        envoyer_mess6(sock[1],buf,envoi_reception[0]);
+						sendto_all_servs(sock[1],DECO,"",&nb_server,liste_server);
 				        break;
 				    default:
 				        // type de message inconnu

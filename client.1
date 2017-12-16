@@ -95,6 +95,54 @@ Ip invalide
 .RS
 L'ip entree n'est pas une ipv6.
 .RE
+.SH EXEMPLE
+.PP
+.B Exemple put 
+avec:
+ \- un fichier test.txt
+ \- l'ip associée au hash sera ::5
+ \- l'ip du serveur est ::1
+ \- le port du serveur est 9999
+
+Commande:
+.B ./client
+::1 9999 put `sha384sum test.txt | cut -d " " -f1` ::5
+
+Resultat: Message envoye au serveur.
+.PP
+.B Exemple get 
+sur le fichier toto.txt:
+ \- ce sont les memes infos que pour put sauf qu'on ne connait pas l'ip associee au hash
+
+Commande: 
+.B ./client 
+::1 9999 get `sha384sum test.txt | cut -d " " -f1`
+
+Resultat si le hash existe et n'est pas obselete:  Ip liées au hash demandé: ::5
+
+Si le hash est obselte ou si le hash n'exite pas: Ip liées au hash demandé: no IP match with request
+
+.B Exemple exit:
+ \- l'ip du serveur est ::1
+ \- le port du serveur est 9999
+ \- le mot de passe du serveur est "password"
+ 
+Commande: 
+.B ./client
+::1 9999 exit password
+
+.SH CODES DE RETOUR
+.TI
+.B client
+a les codes de retour suivants:
+
+.TI
+.B 0	
+La commande a ete executee correctement.
+
+.TI
+.B 1	
+La commande n'a pas abouti.
 .SH BUGS
 ." Bugs eventuels
 .PP
