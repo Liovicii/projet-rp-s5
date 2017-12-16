@@ -419,8 +419,7 @@ int main(int argc, char * argv[]){
 				        break;
 				  
 				    case NEW:
-				    	printf("On recoit une demande de connexion\
-				    	 ou un nouveau serveur a ajouter\n");
+				    	printf("On recoit une demande de connexion\n");
 				        if(nb_server>9){
                             printf("Not enough space for new connexion\n");
 				        	// Il n'y a plus de place dans la liste
@@ -489,7 +488,7 @@ int main(int argc, char * argv[]){
 	
         
 
-    printf("Le serveur s'arrete");
+    printf("Le serveur s'arrete\n");
        
     // il faut notifier les autres serveurs qu'on s'arrete
 

@@ -37,11 +37,6 @@ et son
 ." Messages d'erreurs courants
 Les messages d'erreurs suivant sont susceptibles d'etre affichées sur stderr:
 
-Port deja utilisé.
-.RS
-Le port que vous avez entré est deja en cours d'utilisation ou est reservé par le programme.
-.RE
-
 Port invalide.
 .RS
 Le 
@@ -77,8 +72,44 @@ On a ateint le nombre maximum de connexion autorisés.
 
 NO ANSWER FROM SERVER
 .RS
-Le serveur n'a pas repondu dans les temps ou le serveur demandé n'exite pas.
+Le serveur n'a pas repondu dans les temps ou le serveur demande n'exite pas.
 .RE
+.SH EXEMPLE
+.PP
+.B Exemple demmarage
+ \- l'ip du serveur est ::1
+ \- le port du serveur est 9999
+
+Commande: 
+.B ./server
+::1 9999
+
+Resultat : Le serveur est operationnel
+
+.B Exemple -c:
+ \- l'ip qu'on veut donner au serveur est ::2
+ \- le port que l'on veut donner au serveur est 9887
+ \- l'ip du serveur dest est ::1
+ \- le port du serveur dest est 9999
+
+Commande:
+.B ./server
+::2 9887 -c ::1 9997
+
+Resultat:
+.SH CODES DE RETOUR
+.TI
+.B client
+a les codes de retour suivants:
+
+.TI
+.B 0	
+Le serveur s'est termine correctement.
+
+.TI
+.B 1	
+Le serveur s'est arrete suite a une erreur.
+.SH BUGS
 .SH BUGS
 ." Bugs eventuels
 .PP 
