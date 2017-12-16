@@ -135,6 +135,8 @@ int main(int argc, char **argv)
 		else{
 			printf("On a pas recu de reponse de la part du serveur\n");
 			printf("Veuillez vous assurer que ce serveur est actif\n");
+			close(sockfd);
+			exit(EXIT_FAILURE);
 		}
 			// close the socket
 		close(sockfd);
@@ -167,7 +169,7 @@ int main(int argc, char **argv)
 		// On envoie le message
 
 		envoyer_mess6(sockfd,buf,dest);
-		printf("Me: %s\n",buf);
+		printf("Message envoyé au serveur.\n");
 		// On ferme le socket
 		fermer_socket(sockfd);
 		break;
@@ -184,15 +186,43 @@ int main(int argc, char **argv)
 			fprintf(stderr,"Erreur conversion ip\n");
 			exit(EXIT_FAILURE);
 		}
-		remplir_type(EXIT,type);
+		
 		// On initialise la chaine de caractere
 		memset(buf,'\0',MESS_MAX_SIZE);
 
 		//On creer le message
+		remplir_type(EXIT,type);
 		remplir_lg("",argv[4],length);
 		creation_chaine(type,length,argv[4],buf);
 		// On envoi le message
 		envoyer_mess6(sockfd,buf,dest);
+		
+		max_sd=sockfd+1;
+		waitTh.tv_sec 	= 5;
+		waitTh.tv_usec 	= 50;
+		FD_ZERO(&read_sds);
+		FD_SET(sockfd, &read_sds);
+		ret= select(max_sd,&read_sds,NULL, NULL, &waitTh);
+		if (ret <0){
+			perror("select");
+			exit(EXIT_FAILURE);
+		}
+		else if (FD_ISSET(sockfd,&read_sds)){
+			recevoir_mess6(sockfd,buf,MESS_MAX_SIZE,client);
+			extract_string(buf,type,0,LENGTH_TYPE);
+			extract_string(buf,length,1,LENGTH_LG);
+			extract_string(buf,ip,3,get_length_ip(length));
+			extract_string(buf,hash,3+get_length_ip(length),get_length_hash(length));
+
+			// hash va contenir les ip qui sont associes au hash sur le serveur
+			printf("%s\n",hash);	
+		}
+		else{
+			printf("On a pas recu de reponse de la part du serveur\n");
+			printf("Veuillez vous assurer que ce serveur est actif\n");
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
 		fermer_socket(sockfd);
 		break;
 	default:

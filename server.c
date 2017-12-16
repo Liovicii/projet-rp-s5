@@ -73,8 +73,6 @@ int main(int argc, char * argv[]){
 	int end = 0;
 	int test;
     int connexion = 0, nb_server = 0;
-	//int sock_serv;
-    //int sock_serv[10];
 	int sock[4];
 	struct sockaddr_in6 envoi_reception[4];
 	// Pour le keep alive
@@ -313,9 +311,11 @@ int main(int argc, char * argv[]){
 				        }
 				        // on doit envoyer le hash aux autres serveurs !
 				        if(test != NTD){
-				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
+				            printf("New Entry in table: IP %s has hash %s\n",\
+				            ip_m,hash);
                            	// Envoyer have a tous les serveur
-                            sendto_all_servs(sock[1],HAVE,buf,&nb_server,liste_server);
+                            sendto_all_servs(sock[1],HAVE,buf,&nb_server,\
+                            liste_server);
                             free(ip_m);
 				            free(hash);
 				        }
@@ -351,24 +351,31 @@ int main(int argc, char * argv[]){
 
 				        if(check_access_code(hash) == 0){
 				            printf("mot de passe correct\n");
-				            remplir_lg("","mot de passe correct",lg);
-							creation_chaine(type,lg,"mot de passe correct",buf);
+				            remplir_lg("","mot de passe correct,\
+				             arret du serveur",lg);
+							creation_chaine(type,lg,\
+							"mot de passe correct, arret du serveur",buf);
 				            end = 1;
+				            sendto_all_servs(sock[1],DECO,"",\
+				            &nb_server,liste_server);
 				        }
 				        else{
 				            printf("mot de passe incorrect\n");
 				            remplir_lg("","mot de passe incorrect",lg);
-							creation_chaine(type,lg,"mot de passe incorrect",buf);
+							creation_chaine(type,lg,"mot de passe incorrect",\
+							buf);
 				            end = 0;
 				        }
 				        free(hash);
 				        //On notifie tous les serveur qu'on va se deconnecter
+				        //On repond au client si on se deconnecte ou non
 				        envoyer_mess6(sock[1],buf,envoi_reception[0]);
-						sendto_all_servs(sock[1],DECO,"",&nb_server,liste_server);
+						
 				        break;
 				    default:
 				        // type de message inconnu
-				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
+				        fprintf(stderr,"Erreur: message type %d inconnu\n",\
+				        type_mess);
 				        break;
 				} // fin switch
    
@@ -404,14 +411,16 @@ int main(int argc, char * argv[]){
 				        }
 				        // on doit envoyer le hash aux autres serveurs !
 				        if(test != NTD){
-				            printf("New Entry in table: IP %s has hash %s\n",ip_m,hash);
+				            printf("New Entry in table: IP %s has hash %s\n",\
+				            ip_m,hash);
 				            free(ip_m);
 				            free(hash);
 				        }
 				        break;
 				  
 				    case NEW:
-				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
+				    	printf("On recoit une demande de connexion\
+				    	 ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
                             printf("Not enough space for new connexion\n");
 				        	// Il n'y a plus de place dans la liste
@@ -436,21 +445,25 @@ int main(int argc, char * argv[]){
                     case NEW_SERV:
                             //On extrait l'ip du message
                             ip_m = extraire_ip_mess(buf);
-                            //On creer une entree pour stocker les coordonnées du serveur
-                            if(convert_ipv6(ip_m, PORT_ENV_SERV, &liste_server[nb_server]) == ERROR){
+                            //On creer une entree 
+                            //pour stocker les coordonnées du serveur
+                            if(convert_ipv6(ip_m, PORT_ENV_SERV,\
+                             &liste_server[nb_server]) == ERROR){
                                 usage(argv[0]);
                             } 
                             //On fini de remplir la structure
                         	liste_server[nb_server].sin6_family=AF_INET6;
                             //On rempli le port de communication par defaut
-                            liste_server[nb_server].sin6_port=htons(PORT_ENV_SERV);
+                            liste_server[nb_server].sin6_port=\
+                           	htons(PORT_ENV_SERV);
 				        	nb_server++;
                         break;
 				    case DECO:
 				    	//On met l'ip a supprimer de la liste dans la structure
 				    	thread_arg.ip_deco=envoi_reception[2];
 				    	//On lance le thread
-				    	pthread_create(&deco_serveur,NULL,deconnexion_serv,&thread_arg);
+				    	pthread_create(&deco_serveur,NULL,\
+				    	deconnexion_serv,&thread_arg);
 				        break;
 					case KEEP_ALIVE:
 						//On reponds par yes quand on recoit un message
@@ -459,7 +472,8 @@ int main(int argc, char * argv[]){
                		break;
 				    default:
 				        // type de message inconnu
-				        fprintf(stderr,"Erreur: message type %d inconnu\n",type_mess);
+				        fprintf(stderr,"Erreur: message type %d inconnu\n",\
+				        type_mess);
 				        break;
 				} // fin switch
    			
@@ -475,8 +489,8 @@ int main(int argc, char * argv[]){
 	
         
 
-    printf("Arret du serveur %s\n", argv[1]);
-   
+    printf("Le serveur s'arrete");
+       
     // il faut notifier les autres serveurs qu'on s'arrete
 
     // fermeture du socket
@@ -487,7 +501,7 @@ int main(int argc, char * argv[]){
 	fermer_socket(sock_alive);
     // suppression de la table
     supp_dht(t);
-
+	printf("Le serveur est arrete\n");
     // le programme s'est bien déroulé 
     exit(EXIT_SUCCESS);
 
