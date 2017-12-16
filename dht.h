@@ -23,6 +23,13 @@
 #define TIME_LIMIT      30     // obsolescence après 30 secondes
 #define T_ALIVE			5	  // Temps avant de renvoyer un keep alive
 
+//Definition des ports reservers pour la communication du serveur
+#define PORT_ENV_CLIENT 58752	//Port pour l'envoi au client
+#define PORT_REC_SERV	58951	//Port pour la reception de messages entre serveurs
+#define PORT_ENV_SERV	58952	//Port pour l'envoi de messages entre serveurs
+#define PORT_KEEP_ALIVE	58523	//Port utilisé par le keep alive
+
+
 #define PASS            "password123" // mot de passe serveur 
 
 /* Définition des types pour les messages */

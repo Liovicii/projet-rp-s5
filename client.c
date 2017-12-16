@@ -8,7 +8,7 @@
  * \param arg Le nom du programme (généralement argv[0]).
  */
 void usage(char * arg){
-	fprintf(stderr,"usage: %s IP PORT <put/get/exit> HASH [IP]\n",arg);
+	fprintf(stderr,"usage: %s IP PORT <put/get/exit> HASH [IP_HASH]\n",arg);
 	exit(EXIT_FAILURE);
 }
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 					option_lue=GET;
 					//On regarde si le hash est valide
 					if(check_hash(argv[4])==-1){
-						fprintf(stderr,"Erreur: le hash n'est pas assez long\n");
+						fprintf(stderr,"Hash pas assez long\n");
 						usage(argv[0]);
 					}
 				}
@@ -45,6 +45,7 @@ int main(int argc, char **argv)
 					option_lue=EXIT;
 				}
 				else{
+					fprintf(stderr,"Option inconnue\n");
 					usage(argv[0]);
 				}
 				break;
@@ -53,11 +54,12 @@ int main(int argc, char **argv)
 					option_lue=PUT;
 					//On regarde si le hash est valide
 					if(check_hash(argv[4])==-1){
-						fprintf(stderr,"Erreur: le hash n'est pas assez long\n");
+						fprintf(stderr,"Hash pas assez long\n");
 						usage(argv[0]);
 					}
 				}
 				else{
+					fprintf(stderr,"Option inconnue\n");
 					usage(argv[0]);
 				}
 				break;
@@ -67,7 +69,6 @@ int main(int argc, char **argv)
 	
 	// verification du port
 	if(port_valide(atoi(argv[2]))	== ERROR){
-		fprintf(stderr, "Erreur: %d port invalide", atoi(argv[2]));
 		usage(argv[0]);
 	}
 	
@@ -89,7 +90,7 @@ int main(int argc, char **argv)
 
 		//On rempli la strucutre destination
 		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
-			fprintf(stderr,"Erreur: %s IP invalide\n", argv[1]);
+			fprintf(stderr,"Ip invalide\n");
 			usage(argv[0]);
 		}
 
@@ -180,7 +181,7 @@ int main(int argc, char **argv)
 		sockfd=creer_socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 		//On rempli la structure dest
 		if (convert_ipv6(argv[1],atoi(argv[2]),&dest) == ERROR){
-			fprintf(stderr,"je t'aime pas nah\n");
+			fprintf(stderr,"Erreur conversion ip\n");
 			exit(EXIT_FAILURE);
 		}
 		remplir_type(EXIT,type);
@@ -195,7 +196,7 @@ int main(int argc, char **argv)
 		fermer_socket(sockfd);
 		break;
 	default:
-		fprintf(stderr,"Commande inconnue\n");
+		fprintf(stderr,"Option inconnue\n");
 		usage(argv[0]);
 	}
 	

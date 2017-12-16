@@ -2,12 +2,7 @@
 #include "fctsocket.h"
 #include <signal.h>
 
-//Definition des ports reservers pour
-//La reception des messages du client
-#define PORT_ENV_CLIENT 8752
-#define PORT_REC_SERV	8951
-#define PORT_ENV_SERV	8952
-#define PORT_KEEP_ALIVE	8523
+
 
 volatile sig_atomic_t sigInt=0;
 
@@ -58,7 +53,7 @@ void parse_option(char * arg[]){
     }
     
     // option inconnue 
-    fprintf(stderr, "Erreur: option inconnue\n");
+    //fprintf(stderr, "Erreur: option inconnue\n");
     usage(arg[0]);
 }
 
@@ -129,7 +124,8 @@ int main(int argc, char * argv[]){
         case 6:
             // cas avec demande de connexion (option -c)
             if(strcmp(argv[3], "-c") != 0){
-                fprintf(stderr, "Erreur: %s option inconnue\n", argv[3]);
+                fprintf(stderr, "Option inconnue\n");
+                usage(argv[0]);
             }
             add_server(liste_server, argv[4], PORT_REC_SERV, &nb_server);
             connexion = 1;
@@ -143,7 +139,6 @@ int main(int argc, char * argv[]){
 
     // vérification du port
     if((port = port_valide(atoi(argv[2]))) == ERROR){
-        fprintf(stderr, "Invalid port number\n");
         usage(argv[0]);
     }
 
@@ -246,6 +241,7 @@ int main(int argc, char * argv[]){
 			exit(EXIT_FAILURE);
 		}
     }
+    printf("Le serveur est operationnel\n");
     //On lance le thread de keep alive
 	pthread_create(&keep_alive_thread,NULL,keep_alive,&thread_arg);
 
@@ -406,7 +402,7 @@ int main(int argc, char * argv[]){
 				    case NEW:
 				    	printf("On recoit une demande de connexion ou un nouveau serveur a ajouter\n");
 				        if(nb_server>9){
-                            printf("Il n'y a plus de place dans la liste de serveur\n");
+                            printf("Not enough space for new connexion\n");
 				        	// Il n'y a plus de place dans la liste
 				        	// On dit qu'il n'y a plus de place
 				        	remplir_type(ERROR,type);

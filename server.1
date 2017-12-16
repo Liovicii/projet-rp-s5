@@ -1,0 +1,90 @@
+.TH SERVER 1 "15 Decembre 2017" "Version 1.0"
+.SH NOM
+SERVER \- Permet de creer un serveur ipv6 gerant une table de hash partagee.
+.SH SYNOPSIS
+.B server
+ip port [
+.I \-c
+ip_d port_d ]
+.SH DESCRIPTION
+.PP
+Le programme
+.B server
+est creer avec une 
+.I ip
+et un
+.IR port .
+.PP
+Une fois cree il
+.B poura recevoir des hash 
+envoyes par des clients et il les stockera dans une table de hash.
+.PP 
+Il poura aussi 
+.B recevoir 
+des 
+.B demandes de hash 
+ou il 
+.B envera la liste des ip associes 
+au hash au client si le hash existe dans la table;
+.SH OPTIONS
+.IP \-c
+.B Se connecte a un autre serveur 
+dont on precisera son
+.I ip_d
+et son
+.IR port_d . 
+.SH DIAGNOSTICS
+." Messages d'erreurs courants
+Les messages d'erreurs suivant sont susceptibles d'etre affichées sur stderr:
+
+Port deja utilisé.
+.RS
+Le port que vous avez entré est deja en cours d'utilisation ou est reservé par le programme.
+.RE
+
+Port invalide.
+.RS
+Le 
+.B port 
+doit avoir une 
+.B valeure 
+comprise 
+.B entre 0
+et
+.B 655536.
+.RE
+
+Option inconnue
+.RS
+L'option n'est pas 
+.IR -c .
+.RE
+
+Ip invalide
+.RS
+L'ip entree n'est pas une ipv6.
+.RE
+
+Erreur conversion ip
+.RS
+L'ip n'etait pas une ipv6 ou ce n'etait pas une ip valide.
+.RE
+
+Not enough space for new connexion
+.RS
+On a ateint le nombre maximum de connexion autorisés.
+.RE
+
+NO ANSWER FROM SERVER
+.RS
+Le serveur n'a pas repondu dans les temps ou le serveur demandé n'exite pas.
+.RE
+.SH BUGS
+." Bugs eventuels
+.PP 
+Si on a plus que deux serveurs tourant sur la meme interface il y a des deconnexion intenpestives lies a des ecrasement de message lors de l'envoi.
+." autres bugs ?
+.PP
+C'est l'un des rares bugs que j'ai remarqué, si il y en a d'autres veuillez m'excuser.
+.SH AUTEUR
+David Lardenois dlardenois@etu.unistra.fr 

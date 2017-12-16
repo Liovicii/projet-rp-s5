@@ -4,8 +4,20 @@
 
 int port_valide(int port){
     if( (port > 65536) || (port <= 0) ){
+    	fprintf(stderr,"Port invalide\n");
         return ERROR;
     }
+    switch (port){
+    	case PORT_ENV_CLIENT:
+    	case PORT_REC_SERV:
+    	case PORT_ENV_SERV:
+    	case PORT_KEEP_ALIVE:
+    		fprintf(stderr,"Port deja utlisé\n");
+    		return ERROR;
+    		break;
+    	default:
+    		break;
+    	}
     return port;
 }
 

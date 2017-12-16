@@ -1,0 +1,105 @@
+
+.TH CLIENT 1 "15 Decembre 2017" "Version 1.0"
+.SH NOM
+client \- Programme utilisant des ipv6 permettant de communiquer avec un serveur ipv6.
+.SH SYNOPSIS
+.B client 
+ip port 
+.I put/get/exit
+hash/mot_de_passe [ip_hash]
+.SH DESCRIPTION
+.PP
+Le programme
+.B client 
+permet d'envoyer un hash a un serveur ou de recuperer les ip associes a un hash
+on peut aussi dire a un serveur de s'arreter.
+.PP 
+Si on veut envoyer un hash a un serveur il faudra utiliser l'option
+.IR put .
+.
+.PP
+Si on veut recuperer les ip associes a un hash il faudra utiliser l'option
+.IR get .
+.
+.PP
+Pour demander a un serveur de s'arreter on faudra utiliser l'option 
+.IR exit .
+.
+.SH OPTIONS
+.IP put
+permet d'
+.B envoyer
+un 
+.I hash 
+(d'une taille minimale de 65 octets) et l'
+.I ip_hash 
+associees a celui ci,
+.B a un serveur 
+dont on precisera l'
+.I ip
+et le
+.IR port .
+.IP get
+.B demande
+les 
+.B ip 
+associees au 
+.I hash
+.B a un serveur 
+dont on precisera l'
+.I ip
+et le
+.IR port .
+.IP exit
+permet de 
+.B stopper un serveur distant
+en indiquant l'
+.I ip
+et le
+.I port
+du serveur ainsi que le 
+.IR mot_de_passe .
+.SH DIAGNOSTICS
+." Messages d'erreurs courants
+Les messages d'erreurs suivant sont susceptibles d'etre affichées sur stderr:
+
+Hash pas assez long.
+.RS
+Le 
+.B hash 
+doit faire au 
+.B minimun 65 octets 
+de long.
+.RE
+Port invalide.
+.RS
+Le 
+.B port 
+doit avoir une 
+.B valeure 
+comprise 
+.B entre 0
+et
+.B 655536.
+.RE
+Option inconnue
+.RS
+L'option n'est pas 
+.I get
+,
+.I set
+ou
+.IR exit .
+.RE
+Ip invalide
+.RS
+L'ip entree n'est pas une ipv6.
+.RE
+.SH BUGS
+." Bugs eventuels
+.PP
+Je n'ai remarqué aucun bug au cours des tests, si il y en a d'autres veuillez m'excuser.
+.SH AUTEUR
+David Lardenois dlardenois@etu.unistra.fr 
+
+

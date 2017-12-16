@@ -112,14 +112,10 @@ void remplir_lg(char * ip, char * hash, char * lg){
     int taille_ip=strlen(ip);
     int taille_hash=strlen(hash);
     int lgt=taille_ip+(taille_hash<<6);
-    //printf("taille hash decale: %d\n",taille_hash<<6);
-    //printf("taille taille: %d\n",lgt);
     //Stockage de la longueur de l'ip dans le premier octet
     lg[0]=((char)(lgt-((lgt>>6)<<6)))-'0';
-    //printf("conversion taille: %c\n",lg[0]);
     //Stockage de la longueur du hash dans le deuxieme octet
     lg[1]=((char)(lgt>>6))-'0';
-    //printf("conversion taille: %c\n",lg[1]);
     lg[2]='\0';
     return;
 }
@@ -127,15 +123,11 @@ void remplir_lg(char * ip, char * hash, char * lg){
 void remplir_type(int val_type, char * type){
     snprintf(type,2,"%d",val_type);
     type[1]=('\0');
-    //printf("Conversion type a l'arache %c %d\n",type[0],((int)type[0]-'0'));
     return;
 }
 
 void extract_string(char * entree,char * sortie, int indice, int t_a_extr){
-    //strncpy(sortie,entree+indice,t_a_extr);
     sortie=memcpy(sortie,entree+indice,t_a_extr);
-    //printf("Sortie= %s\n",sortie);
-    //sortie[t_a_extr];
     sortie[(t_a_extr)]='\0';
     return;
 }
@@ -172,7 +164,7 @@ char * extraire_ip_mess(char * mes){
     char *ip=malloc((lg+1));
     if (ip ==NULL){
         fprintf(stderr,"Erreur extraire_ip_mess\n");
-        fprintf(stderr,"On a pas reussi a llouer la memoire\n");
+        fprintf(stderr,"On a pas reussi a allouer la memoire\n");
         exit(EXIT_FAILURE);
     }
     extract_string(mes,ip,3,lg);
